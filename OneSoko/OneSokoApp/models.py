@@ -16,7 +16,7 @@ class Product(models.Model):
     # Quantity available in stock
     quantity = models.IntegerField(default=0)
     # Optional image for the product
-    image = models.ImageField(upload_to='/products/images', blank=True)
+    image = models.ImageField(upload_to='products/images', blank=True)
     # Category of the product
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     # Tags for the product

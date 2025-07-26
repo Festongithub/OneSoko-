@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, WishlistViewSet, MessageViewSet, NotificationViewSet
+    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, WishlistViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet
 )
 
 # Create a router and register our viewsets with it
@@ -19,6 +19,7 @@ router.register(r'payments', PaymentViewSet)
 router.register(r'wishlists', WishlistViewSet)
 router.register(r'messages', MessageViewSet)
 router.register(r'notifications', NotificationViewSet)
+router.register(r'users', UserRegistrationViewSet, basename='user-registration')
 
 # The API URLs are now determined automatically by the router
 urlpatterns = [
