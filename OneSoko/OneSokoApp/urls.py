@@ -3,6 +3,10 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, WishlistViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet, ShopownerRegistrationViewSet
 )
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -25,4 +29,8 @@ router.register(r'shopowners', ShopownerRegistrationViewSet, basename='shopowner
 # The API URLs are now determined automatically by the router
 urlpatterns = [
     path('api/', include(router.urls)),
+]
+urlpatterns += [
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ] 

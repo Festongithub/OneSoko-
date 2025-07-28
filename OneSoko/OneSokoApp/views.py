@@ -10,6 +10,10 @@ from django.contrib.auth.models import User
 from .serializers import UserRegistrationSerializer, ShopownerRegistrationSerializer
 from rest_framework import permissions
 from rest_framework import mixins
+from .permissions import IsShopOwner
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 
 # Create your views here.
 
@@ -22,6 +26,39 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
+    permission_classes = [IsShopOwner]
+
+    def perform_create(self, serializer):
+        # Automatically set the shopowner to the current user
+        serializer.save(shopowner=self.request.user)
+
+    @action(detail=True, methods=['get'])
+    def products(self, request, pk=None):
+        shop = self.get_object()
+        products = shop.products.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def add_product(self, request, pk=None):
+        shop = self.get_object()
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            product = serializer.save()
+            shop.products.add(product)
+            return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], url_path='products/(?P<product_id>[^/.]+)')
+    def delete_product(self, request, pk=None, product_id=None):
+        shop = self.get_object()
+        try:
+            product = shop.products.get(pk=product_id)
+            shop.products.remove(product)
+            product.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Product.DoesNotExist:
+            return Response({'detail': 'Product not found in this shop.'}, status=status.HTTP_404_NOT_FOUND)
 
 # Category ViewSet
 class CategoryViewSet(viewsets.ModelViewSet):
