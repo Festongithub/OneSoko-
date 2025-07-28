@@ -215,6 +215,8 @@ class UserProfile(models.Model):
     avatar = models.ImageField(upload_to='users/avatars/', blank=True, null=True)
     # Address (can be expanded to structured fields)
     address = models.CharField(max_length=255, blank=True)
+    # Is this user a shopowner?
+    is_shopowner = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

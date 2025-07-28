@@ -7,7 +7,7 @@ from .serializers import (
     ProductSerializer, ShopSerializer, CategorySerializer, TagSerializer, ReviewSerializer, ProductVariantSerializer, UserProfileSerializer, OrderSerializer, OrderItemSerializer, PaymentSerializer, WishlistSerializer, MessageSerializer, NotificationSerializer
 )
 from django.contrib.auth.models import User
-from .serializers import UserRegistrationSerializer
+from .serializers import UserRegistrationSerializer, ShopownerRegistrationSerializer
 from rest_framework import permissions
 from rest_framework import mixins
 
@@ -82,4 +82,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
 class UserRegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+
+# Shopowner registration viewset
+class ShopownerRegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = ShopownerRegistrationSerializer
     permission_classes = [permissions.AllowAny]

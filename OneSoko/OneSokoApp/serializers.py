@@ -97,7 +97,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
-# User registration serializer
+# User registration serializer (regular user)
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -111,4 +111,26 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=validated_data.get('email', ''),
             password=validated_data['password']
         )
+        # Create UserProfile with is_shopowner=False
+        from .models import UserProfile
+        UserProfile.objects.create(user=user, is_shopowner=False)
+        return user
+
+# Shopowner registration serializer
+class ShopownerRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password']
+        )
+        # Create UserProfile with is_shopowner=True
+        from .models import UserProfile
+        UserProfile.objects.create(user=user, is_shopowner=True)
         return user 
