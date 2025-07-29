@@ -40,6 +40,7 @@ class TagSerializer(serializers.ModelSerializer):
 # Shop serializer
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
+    shopowner = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Shop
         fields = '__all__'
