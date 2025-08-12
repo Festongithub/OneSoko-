@@ -1,0 +1,2 @@
+OneSoko/OneSokoApp/node_modules/.cache/default-development/*.pack filter=lfs diff=lfs merge=lfs -text
+OneSoko/cursor.AppImage filter=lfs diff=lfs merge=lfs -text
