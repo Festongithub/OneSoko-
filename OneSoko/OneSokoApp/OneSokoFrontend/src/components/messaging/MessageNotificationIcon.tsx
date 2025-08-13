@@ -4,9 +4,7 @@ import {
   ChatBubbleLeftIcon, 
   XMarkIcon, 
   PaperAirplaneIcon, 
-  MagnifyingGlassIcon,
-  UserIcon,
-  BuildingStorefrontIcon
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { messagesAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -63,9 +61,18 @@ const MessageNotificationIcon: React.FC = () => {
         console.log('Fetching shops...');
         const shopsData = await import('../../services/api').then(module => module.shopsAPI.getAll());
         console.log('Shops fetched:', shopsData);
-        setShops(shopsData || []);
+        
+        // Ensure we always set an array
+        if (Array.isArray(shopsData)) {
+          setShops(shopsData);
+        } else if (shopsData && typeof shopsData === 'object' && 'shops' in shopsData && Array.isArray((shopsData as any).shops)) {
+          setShops((shopsData as any).shops);
+        } else {
+          setShops([]);
+        }
       } catch (error) {
         console.error('Failed to fetch shops:', error);
+        setShops([]); // Ensure shops is always an array on error
       }
     };
 
@@ -150,11 +157,11 @@ const MessageNotificationIcon: React.FC = () => {
   };
 
   // Filter shops based on search
-  const filteredShops = shops.filter(shop => 
-    shop.name.toLowerCase().includes(shopSearch.toLowerCase()) ||
+  const filteredShops = Array.isArray(shops) ? shops.filter(shop => 
+    shop.name?.toLowerCase().includes(shopSearch.toLowerCase()) ||
     shop.city?.toLowerCase().includes(shopSearch.toLowerCase()) ||
     shop.location?.toLowerCase().includes(shopSearch.toLowerCase())
-  );
+  ) : [];
 
   if (!isAuthenticated) {
     return null;

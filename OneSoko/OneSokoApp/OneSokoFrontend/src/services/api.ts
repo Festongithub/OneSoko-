@@ -269,7 +269,14 @@ export const shopsAPI = {
     try {
       // Use public endpoint that doesn't require authentication
       const response: AxiosResponse = await api.get(API_ENDPOINTS.SHOP_PUBLIC_LIST);
-      return response.data;
+      
+      // Handle enhanced response format
+      if (response.data && response.data.shops) {
+        return response.data.shops;
+      }
+      
+      // Fallback for direct array response
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       throw new Error(handleApiError(error as AxiosError));
     }
