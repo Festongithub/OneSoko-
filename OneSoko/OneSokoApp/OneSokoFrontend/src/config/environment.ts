@@ -66,6 +66,10 @@ export const API_ENDPOINTS = {
   SHOP_VERIFICATION_UPLOAD: (id: string) => `/shops/${id}/verification/upload/`,
   SHOP_VERIFICATION_SUBMIT: (id: string) => `/shops/${id}/verification/submit/`,
   SHOP_SEARCH: '/shops/search/',
+  SHOP_AUTOCOMPLETE: '/shops/autocomplete/',
+  SHOP_QUICK_CREATE: '/shops/quick-create/',
+  SHOP_BY_LOCATION: '/shops/by-location/',
+  SHOP_TRENDING: '/shops/trending/',
   
   // Categories
   CATEGORIES: '/categories/',

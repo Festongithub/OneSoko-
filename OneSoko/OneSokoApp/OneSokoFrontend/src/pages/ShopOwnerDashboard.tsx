@@ -21,6 +21,7 @@ import ShopProfileManagement from '../components/shops/ShopProfileManagement';
 import BusinessVerification from '../components/shops/BusinessVerification';
 import { shopsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { createMockShop } from '../utils/mockData';
 
 const ShopOwnerDashboard: React.FC = () => {
   const { activeShop, userShops, user } = useAuth();
@@ -60,26 +61,10 @@ const ShopOwnerDashboard: React.FC = () => {
       console.error('Error loading user shops:', error);
       // For demo purposes, add some mock shops if API fails
       const mockShops: Shop[] = [
-        {
+        createMockShop({
           shopId: "1",
           name: "My Awesome Shop",
           description: "A fantastic shop with amazing products",
-          slug: "my-awesome-shop",
-          logo: null,
-          location: "Nairobi, Kenya",
-          street: "123 Main St",
-          city: "Nairobi",
-          country: "Kenya",
-          phone: "+254700000000",
-          email: "shop@example.com",
-          social_link: "https://example.com",
-          status: "active",
-          total_orders: 156,
-          total_sales: 45000,
-          views: 1200,
-          created_at: "2024-01-01T00:00:00Z",
-          latitude: null,
-          longitude: null,
           shopowner: {
             id: 1,
             username: "shopowner",
@@ -88,7 +73,7 @@ const ShopOwnerDashboard: React.FC = () => {
             last_name: "Owner",
             date_joined: "2024-01-01T00:00:00Z"
           }
-        }
+        })
       ];
       setShops(mockShops);
       setSelectedShop(mockShops[0]);

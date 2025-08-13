@@ -7,7 +7,7 @@ import {
   XMarkIcon,
   CloudArrowUpIcon,
   EyeIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   TrashIcon,
   PlusIcon,
   InformationCircleIcon
@@ -38,22 +38,41 @@ const BusinessVerification: React.FC<BusinessVerificationProps> = ({
 }) => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<VerificationDocument[]>(
-    shop.verification_documents?.map(doc => ({
-      id: doc.id || Math.random().toString(36).substr(2, 9),
-      name: doc.name || '',
-      type: doc.type as any || 'other',
-      file: null,
-      url: doc.url,
-      uploadedAt: doc.uploadedAt,
-      status: doc.status as any || 'pending',
-      rejectionReason: doc.rejectionReason
-    })) || []
+    shop.verification_documents?.map(doc => {
+      // Handle both object and string formats for backward compatibility
+      if (typeof doc === 'string') {
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          name: doc,
+          type: 'other' as const,
+          file: null,
+          url: undefined,
+          uploadedAt: undefined,
+          status: 'pending' as const,
+          rejectionReason: undefined
+        };
+      }
+      return {
+        id: doc.id || Math.random().toString(36).substr(2, 9),
+        name: doc.name || '',
+        type: doc.type || 'other',
+        file: null,
+        url: doc.url,
+        uploadedAt: doc.uploadedAt,
+        status: doc.status || 'pending',
+        rejectionReason: doc.rejectionReason
+      };
+    }) || []
   );
   const [loading, setLoading] = useState(false);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
-  const documentTypes = [
+  const documentTypes: Array<{
+    value: VerificationDocument['type'];
+    label: string;
+    required: boolean;
+  }> = [
     { value: 'business_license', label: 'Business License', required: true },
     { value: 'tax_certificate', label: 'Tax Certificate', required: true },
     { value: 'identity_document', label: 'Identity Document', required: true },
@@ -172,7 +191,7 @@ const BusinessVerification: React.FC<BusinessVerificationProps> = ({
       // Check if required documents are uploaded
       const requiredTypes = documentTypes.filter(type => type.required).map(type => type.value);
       const uploadedTypes = documents.filter(doc => doc.file || doc.url).map(doc => doc.type);
-      const missingRequired = requiredTypes.filter(type => !uploadedTypes.includes(type));
+      const missingRequired = requiredTypes.filter(type => !uploadedTypes.some(uploadedType => uploadedType === type));
       
       if (missingRequired.length > 0) {
         const missingLabels = missingRequired.map(type => 
@@ -405,7 +424,7 @@ const BusinessVerification: React.FC<BusinessVerificationProps> = ({
                             }}
                             className="p-1 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                           >
-                            <DownloadIcon className="w-4 h-4" />
+                            <ArrowDownTrayIcon className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

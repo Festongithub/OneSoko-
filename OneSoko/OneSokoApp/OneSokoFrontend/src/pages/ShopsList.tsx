@@ -12,6 +12,7 @@ import {
 import { shopsAPI } from '../services/api';
 import { Shop } from '../types';
 import { config } from '../config/environment';
+import { createMockShops } from '../utils/mockData';
 
 // Utility function to convert relative URLs to full URLs
 const getFullImageUrl = (imageUrl: string | null): string | null => {
@@ -100,95 +101,7 @@ const ShopsList: React.FC = () => {
       // Only use mock data if we can't connect to the database
       if (error instanceof Error && error.message.includes('Database connection failed')) {
         console.log('🔄 Using mock data as fallback');
-        const mockShops: Shop[] = [
-          {
-            shopId: '1',
-            name: 'Tech Haven Electronics',
-            description: 'Your one-stop shop for all electronics and gadgets. We offer the latest smartphones, laptops, and accessories.',
-            location: 'Nairobi, Kenya',
-            logo: null,
-            created_at: '2024-01-15T10:00:00Z',
-            status: 'active',
-            phone: '+254700123456',
-            email: 'info@techhaven.co.ke',
-            social_link: 'https://facebook.com/techhaven',
-            slug: 'tech-haven-electronics',
-            views: 1250,
-            total_sales: 45000,
-            total_orders: 89,
-            latitude: -1.2921,
-            longitude: 36.8219,
-            street: 'Kimathi Street',
-            city: 'Nairobi',
-            country: 'Kenya',
-            shopowner: {
-              id: 1,
-              username: 'techowner',
-              email: 'owner@techhaven.co.ke',
-              first_name: 'John',
-              last_name: 'Kamau',
-              date_joined: '2024-01-10T00:00:00Z'
-            }
-          },
-          {
-            shopId: '2',
-            name: 'Fashion Forward Boutique',
-            description: 'Trendy clothing and accessories for men and women. Latest fashion trends at affordable prices.',
-            location: 'Mombasa, Kenya',
-            logo: null,
-            created_at: '2024-01-20T14:30:00Z',
-            status: 'active',
-            phone: '+254700654321',
-            email: 'info@fashionforward.co.ke',
-            social_link: 'https://instagram.com/fashionforward',
-            slug: 'fashion-forward-boutique',
-            views: 890,
-            total_sales: 32000,
-            total_orders: 67,
-            latitude: -4.0435,
-            longitude: 39.6682,
-            street: 'Moi Avenue',
-            city: 'Mombasa',
-            country: 'Kenya',
-            shopowner: {
-              id: 2,
-              username: 'fashionista',
-              email: 'owner@fashionforward.co.ke',
-              first_name: 'Sarah',
-              last_name: 'Johnson',
-              date_joined: '2024-01-10T00:00:00Z'
-            }
-          },
-          {
-            shopId: '3',
-            name: 'Fresh Market Groceries',
-            description: 'Premium grocery store offering fresh produce, organic foods, and household essentials. Quality guaranteed.',
-            location: 'Kisumu, Kenya',
-            logo: null,
-            created_at: '2024-02-01T09:15:00Z',
-            status: 'active',
-            phone: '+254700789012',
-            email: 'info@freshmarket.co.ke',
-            social_link: 'https://facebook.com/freshmarket',
-            slug: 'fresh-market-groceries',
-            views: 567,
-            total_sales: 18000,
-            total_orders: 45,
-            latitude: -0.1022,
-            longitude: 34.7617,
-            street: 'Oginga Odinga Street',
-            city: 'Kisumu',
-            country: 'Kenya',
-            shopowner: {
-              id: 3,
-              username: 'freshmarket',
-              email: 'owner@freshmarket.co.ke',
-              first_name: 'Michael',
-              last_name: 'Ochieng',
-              date_joined: '2024-01-25T00:00:00Z'
-            }
-          }
-        ];
+        const mockShops = createMockShops();
         setShops(mockShops);
         setError('⚠️ Database connection failed - showing demo data. Please ensure your backend server is running.');
       } else {

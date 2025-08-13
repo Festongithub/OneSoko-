@@ -52,6 +52,7 @@ import ProductVariantsApiTest from './components/ProductVariantsApiTest';
 import ReviewsApiTest from './components/ReviewsApiTest';
 import WishlistApiTest from './components/WishlistApiTest';
 import PaymentsApiTest from './components/PaymentsApiTest';
+import ShopSystemTest from './pages/ShopSystemTest';
 
 const AppContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -127,6 +128,7 @@ const AppContent: React.FC = () => {
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 
                 {/* API Test Pages */}
+                <Route path="/shop-system-test" element={<ShopSystemTest />} />
                 <Route path="/order-api-test" element={<ProtectedRoute><OrderApiTest /></ProtectedRoute>} />
                 <Route path="/categories-api-test" element={<ProtectedRoute><CategoriesApiTest /></ProtectedRoute>} />
                 <Route path="/messages-api-test" element={<ProtectedRoute><MessagesApiTest /></ProtectedRoute>} />

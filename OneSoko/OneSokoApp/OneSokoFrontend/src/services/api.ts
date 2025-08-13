@@ -311,12 +311,114 @@ export const shopsAPI = {
       const response: AxiosResponse = await api.get(`${API_ENDPOINTS.SHOP_SEARCH}?${params.toString()}`);
       
       // Handle the enhanced search response format
-      if (response.data && response.data.results) {
-        return response.data.results;
+      if (response.data && response.data.shops) {
+        return response.data.shops;
       }
       
       // Fallback for direct array response
       return response.data || [];
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Advanced search with filters
+  advancedSearch: async (filters: {
+    q?: string;
+    city?: string;
+    country?: string;
+    status?: string;
+  }): Promise<{ count: number; query: string; filters: any; shops: Shop[] }> => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.q) params.append('q', filters.q);
+      if (filters.city) params.append('city', filters.city);
+      if (filters.country) params.append('country', filters.country);
+      if (filters.status) params.append('status', filters.status);
+      
+      const response: AxiosResponse = await api.get(`${API_ENDPOINTS.SHOP_SEARCH}?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Autocomplete search
+  autocomplete: async (query: string): Promise<{ query: string; suggestions: Shop[] }> => {
+    try {
+      const params = new URLSearchParams({ q: query });
+      const response: AxiosResponse = await api.get(`${API_ENDPOINTS.SHOP_AUTOCOMPLETE}?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Search by location
+  searchByLocation: async (city?: string, country?: string): Promise<{
+    locations: Array<{
+      city: string;
+      country: string;
+      shop_count: number;
+      recent_shops: Shop[];
+    }>
+  }> => {
+    try {
+      const params = new URLSearchParams();
+      if (city) params.append('city', city);
+      if (country) params.append('country', country);
+      
+      const response: AxiosResponse = await api.get(`${API_ENDPOINTS.SHOP_BY_LOCATION}?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Get trending shops
+  getTrending: async (): Promise<{ trending_shops: Shop[] }> => {
+    try {
+      const response: AxiosResponse = await api.get(API_ENDPOINTS.SHOP_TRENDING);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Quick create shop
+  quickCreate: async (shopData: {
+    name: string;
+    description: string;
+    shopowner?: string;
+    city?: string;
+    country?: string;
+  }): Promise<Shop> => {
+    try {
+      const response: AxiosResponse = await api.post(API_ENDPOINTS.SHOP_QUICK_CREATE, shopData);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error as AxiosError));
+    }
+  },
+
+  // Enhanced public list with search
+  getPublicList: async (params?: {
+    search?: string;
+    city?: string;
+    country?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ count: number; has_search: boolean; shops: Shop[] }> => {
+    try {
+      const urlParams = new URLSearchParams();
+      if (params?.search) urlParams.append('search', params.search);
+      if (params?.city) urlParams.append('city', params.city);
+      if (params?.country) urlParams.append('country', params.country);
+      if (params?.page) urlParams.append('page', params.page.toString());
+      if (params?.page_size) urlParams.append('page_size', params.page_size.toString());
+      
+      const response: AxiosResponse = await api.get(`${API_ENDPOINTS.SHOP_PUBLIC_LIST}?${urlParams.toString()}`);
+      return response.data;
     } catch (error) {
       throw new Error(handleApiError(error as AxiosError));
     }

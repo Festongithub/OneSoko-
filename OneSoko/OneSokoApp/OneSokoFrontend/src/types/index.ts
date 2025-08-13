@@ -83,8 +83,8 @@ export interface Shop {
   
   // Business Verification
   is_verified: boolean;
-  verification_status: 'pending' | 'approved' | 'rejected' | 'not_submitted';
-  verification_documents?: string[];
+  verification_status: 'pending' | 'approved' | 'rejected' | 'not_submitted' | 'not_started' | 'under_review';
+  verification_documents?: VerificationDocument[];
   verification_date?: string;
   
   // Additional Business Info
@@ -335,4 +335,16 @@ export interface ContactForm {
   email: string;
   subject: string;
   message: string;
+}
+
+// Business Verification Types
+export interface VerificationDocument {
+  id: string;
+  name: string;
+  type: 'business_license' | 'tax_certificate' | 'identity_document' | 'bank_statement' | 'utility_bill' | 'other';
+  file?: File | null;
+  url?: string;
+  uploadedAt?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
 } 
