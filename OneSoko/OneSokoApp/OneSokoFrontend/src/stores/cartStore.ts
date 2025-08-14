@@ -1,0 +1,99 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { CartItem, Product, ProductVariant } from '../types';
+
+interface CartState {
+  items: CartItem[];
+  isOpen: boolean;
+  addItem: (product: Product, variant?: ProductVariant, quantity?: number) => void;
+  removeItem: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  clearCart: () => void;
+  toggleCart: () => void;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isOpen: false,
+
+      addItem: (product: Product, variant?: ProductVariant, quantity = 1) => {
+        const itemId = `${product.id}-${variant?.id || 'default'}`;
+        
+        set((state) => {
+          const existingItem = state.items.find(item => item.id === itemId);
+          
+          if (existingItem) {
+            return {
+              items: state.items.map(item =>
+                item.id === itemId
+                  ? { ...item, quantity: item.quantity + quantity }
+                  : item
+              ),
+            };
+          }
+          
+          return {
+            items: [...state.items, {
+              id: itemId,
+              product,
+              variant,
+              quantity,
+            }],
+          };
+        });
+      },
+
+      removeItem: (itemId: string) => {
+        set((state) => ({
+          items: state.items.filter(item => item.id !== itemId),
+        }));
+      },
+
+      updateQuantity: (itemId: string, quantity: number) => {
+        if (quantity <= 0) {
+          get().removeItem(itemId);
+          return;
+        }
+
+        set((state) => ({
+          items: state.items.map(item =>
+            item.id === itemId
+              ? { ...item, quantity }
+              : item
+          ),
+        }));
+      },
+
+      clearCart: () => {
+        set({ items: [] });
+      },
+
+      toggleCart: () => {
+        set((state) => ({ isOpen: !state.isOpen }));
+      },
+
+      getTotalItems: () => {
+        return get().items.reduce((total, item) => total + item.quantity, 0);
+      },
+
+      getTotalPrice: () => {
+        return get().items.reduce((total, item) => {
+          const price = item.variant?.price_adjustment 
+            ? parseFloat(item.product.price) + parseFloat(item.variant.price_adjustment)
+            : parseFloat(item.product.price);
+          return total + (price * item.quantity);
+        }, 0);
+      },
+    }),
+    {
+      name: 'cart-storage',
+      partialize: (state) => ({
+        items: state.items,
+      }),
+    }
+  )
+);
