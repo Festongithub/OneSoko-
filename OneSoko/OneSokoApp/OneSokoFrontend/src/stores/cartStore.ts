@@ -21,7 +21,7 @@ export const useCartStore = create<CartState>()(
       isOpen: false,
 
       addItem: (product: Product, variant?: ProductVariant, quantity = 1) => {
-        const itemId = `${product.id}-${variant?.id || 'default'}`;
+        const itemId = `${product.productId}-${variant?.id || 'default'}`;
         
         set((state) => {
           const existingItem = state.items.find(item => item.id === itemId);
@@ -42,6 +42,7 @@ export const useCartStore = create<CartState>()(
               product,
               variant,
               quantity,
+              addedAt: new Date().toISOString(),
             }],
           };
         });
@@ -82,10 +83,17 @@ export const useCartStore = create<CartState>()(
 
       getTotalPrice: () => {
         return get().items.reduce((total, item) => {
-          const price = item.variant?.price_adjustment 
-            ? parseFloat(item.product.price) + parseFloat(item.variant.price_adjustment)
+          // Use promotional price if available, otherwise use regular price
+          let basePrice = item.product.promotional_price 
+            ? parseFloat(item.product.promotional_price)
             : parseFloat(item.product.price);
-          return total + (price * item.quantity);
+          
+          // Add variant price adjustment if available
+          if (item.variant?.price_adjustment) {
+            basePrice += parseFloat(item.variant.price_adjustment);
+          }
+          
+          return total + (basePrice * item.quantity);
         }, 0);
       },
     }),

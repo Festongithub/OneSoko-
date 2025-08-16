@@ -6,12 +6,19 @@ import { useEffect } from 'react';
 // Store
 import { useAuthStore } from './stores/authStore';
 
+// Context
+import { ThemeProvider } from './contexts/ThemeContext';
+
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import ShopOwnerGuard from './components/ShopOwnerGuard';
+import CustomerShopAccess from './components/CustomerShopAccess';
+import ShopOwnerRedirect from './components/ShopOwnerRedirect';
 
 // Layout Components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import CartSidebar from './components/cart/CartSidebar';
 
 // Customer Pages
 import HomePage from './pages/customer/HomePage';
@@ -62,29 +69,30 @@ function App() {
   }, [checkAuth]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-secondary-50 flex flex-col">
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex flex-col transition-colors duration-200">
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
                 style: {
-                  background: '#10B981',
+                  background: '#363636',
+                  color: '#fff',
                 },
-              },
-              error: {
-                style: {
-                  background: '#EF4444',
+                success: {
+                  style: {
+                    background: '#10B981',
+                  },
                 },
-              },
-            }}
-          />
+                error: {
+                  style: {
+                    background: '#EF4444',
+                  },
+                },
+              }}
+            />
           
           <Routes>
             {/* Customer Routes */}
@@ -100,7 +108,11 @@ function App() {
                       <Route path="/products/:id" element={<ProductDetailPage />} />
                       <Route path="/categories" element={<CategoriesPage />} />
                       <Route path="/shops" element={<ShopsPage />} />
-                      <Route path="/shops/:id" element={<ShopDetailPage />} />
+                      <Route path="/shops/:id" element={
+                        <CustomerShopAccess>
+                          <ShopDetailPage />
+                        </CustomerShopAccess>
+                      } />
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
                       <Route path="/login" element={<LoginPage />} />
@@ -133,29 +145,68 @@ function App() {
 
             {/* Shop Owner Routes */}
             <Route
-              path="/shop/*"
+              path="/shop-owner"
               element={
                 <ProtectedRoute requireShopOwner={true}>
-                  <Header variant="shop-owner" />
-                  <main className="flex-1">
-                    <Routes>
-                      <Route path="/dashboard" element={<ShopDashboard />} />
-                      <Route path="/products" element={<ShopProducts />} />
-                      <Route path="/products/new" element={<AddProduct />} />
-                      <Route path="/products/:id/edit" element={<EditProduct />} />
-                      <Route path="/orders" element={<ShopOrders />} />
-                      <Route path="/analytics" element={<ShopAnalytics />} />
-                      <Route path="/settings" element={<ShopSettings />} />
-                      <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
-                  </main>
+                  <ShopOwnerRedirect />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/shop-owner/*"
+              element={
+                <ProtectedRoute requireShopOwner={true}>
+                  <ShopOwnerGuard requiresShopAccess={false}>
+                    <Header variant="shop-owner" />
+                    <main className="flex-1">
+                      <Routes>
+                        <Route path="/dashboard" element={<ShopDashboard />} />
+                        <Route path="/products" element={<ShopProducts />} />
+                        <Route path="/products/new" element={<AddProduct />} />
+                        <Route path="/products/:id/edit" element={<EditProduct />} />
+                        <Route path="/orders" element={<ShopOrders />} />
+                        <Route path="/analytics" element={<ShopAnalytics />} />
+                        <Route path="/settings" element={<ShopSettings />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </main>
+                  </ShopOwnerGuard>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Shop-specific routes (for shop owners accessing their specific shop) */}
+            <Route
+              path="/shop-owner/shop/:shopId/*"
+              element={
+                <ProtectedRoute requireShopOwner={true}>
+                  <ShopOwnerGuard requiresShopAccess={true}>
+                    <Header variant="shop-owner" />
+                    <main className="flex-1">
+                      <Routes>
+                        <Route path="/dashboard" element={<ShopDashboard />} />
+                        <Route path="/products" element={<ShopProducts />} />
+                        <Route path="/products/new" element={<AddProduct />} />
+                        <Route path="/products/:id/edit" element={<EditProduct />} />
+                        <Route path="/orders" element={<ShopOrders />} />
+                        <Route path="/analytics" element={<ShopAnalytics />} />
+                        <Route path="/settings" element={<ShopSettings />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </main>
+                  </ShopOwnerGuard>
                 </ProtectedRoute>
               }
             />
           </Routes>
+          
+          {/* Global Cart Sidebar */}
+          <CartSidebar />
         </div>
       </Router>
     </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

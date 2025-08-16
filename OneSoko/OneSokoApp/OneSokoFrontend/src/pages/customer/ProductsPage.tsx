@@ -6,10 +6,11 @@ import {
   ListBulletIcon,
   HeartIcon,
   EyeIcon,
-  ShoppingBagIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
+import AddToCartButton from '../../components/cart/AddToCartButton';
+import type { Product } from '../../types';
 
 // Mock data - replace with real API calls later
 const categories = [
@@ -38,109 +39,167 @@ const brands = [
   'HP'
 ];
 
+// Mock products with Product interface structure
 const products = [
   {
-    id: 1,
+    productId: '1',
     name: 'Wireless Bluetooth Headphones Premium',
-    price: 89.99,
-    originalPrice: 129.99,
+    description: 'High-quality wireless headphones with noise cancellation',
+    price: '89.99',
+    promotional_price: '129.99',
+    quantity: 25,
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-    rating: 4.5,
-    reviews: 128,
+    discount: '31',
+    is_active: true,
+    category: { id: 1, name: 'Electronics', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.5,
+    // Additional display properties
+    reviewCount: 128,
     badge: 'Best Seller',
     shop: 'TechWorld Store',
-    category: 'Electronics',
     brand: 'Sony'
   },
   {
-    id: 2,
+    productId: '2',
     name: 'Smart Fitness Watch with Heart Monitor',
-    price: 199.99,
-    originalPrice: 299.99,
+    description: 'Advanced fitness tracking with heart rate monitoring',
+    price: '199.99',
+    promotional_price: '299.99',
+    quantity: 15,
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-    rating: 4.8,
-    reviews: 89,
+    discount: '33',
+    is_active: true,
+    category: { id: 1, name: 'Electronics', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.8,
+    reviewCount: 89,
     badge: 'Limited Offer',
     shop: 'HealthTech Hub',
-    category: 'Electronics',
     brand: 'Apple'
   },
   {
-    id: 3,
+    productId: '3',
     name: 'Organic Cotton T-Shirt Comfortable',
-    price: 24.99,
-    originalPrice: 39.99,
+    description: 'Soft organic cotton t-shirt for everyday wear',
+    price: '24.99',
+    promotional_price: '39.99',
+    quantity: 50,
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-    rating: 4.3,
-    reviews: 67,
+    discount: '38',
+    is_active: true,
+    category: { id: 2, name: 'Fashion', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.3,
+    reviewCount: 67,
     badge: 'Eco-Friendly',
     shop: 'Green Fashion Co',
-    category: 'Fashion',
     brand: 'Nike'
   },
   {
-    id: 4,
+    productId: '4',
     name: 'Professional Camera Lens 50mm',
-    price: 449.99,
-    originalPrice: 599.99,
+    description: 'High-quality 50mm lens for professional photography',
+    price: '449.99',
+    promotional_price: '599.99',
+    quantity: 8,
     image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400&h=400&fit=crop',
-    rating: 4.9,
-    reviews: 156,
+    discount: '25',
+    is_active: true,
+    category: { id: 1, name: 'Electronics', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.9,
+    reviewCount: 156,
     badge: 'Professional',
     shop: 'PhotoPro Gear',
-    category: 'Electronics',
     brand: 'Canon'
   },
   {
-    id: 5,
+    productId: '5',
     name: 'Minimalist Desk Lamp LED',
-    price: 79.99,
-    originalPrice: 119.99,
+    description: 'Modern LED desk lamp with adjustable brightness',
+    price: '79.99',
+    promotional_price: '119.99',
+    quantity: 20,
     image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop',
-    rating: 4.6,
-    reviews: 94,
+    discount: '33',
+    is_active: true,
+    category: { id: 3, name: 'Home & Garden', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.6,
+    reviewCount: 94,
     badge: 'Design Award',
     shop: 'Modern Living',
-    category: 'Home & Garden',
     brand: 'LG'
   },
   {
-    id: 6,
+    productId: '6',
     name: 'Yoga Mat Premium Non-Slip',
-    price: 34.99,
-    originalPrice: 54.99,
+    description: 'Premium non-slip yoga mat for all fitness levels',
+    price: '34.99',
+    promotional_price: '54.99',
+    quantity: 35,
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
-    rating: 4.4,
-    reviews: 203,
+    discount: '36',
+    is_active: true,
+    category: { id: 4, name: 'Sports', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.4,
+    reviewCount: 203,
     badge: 'Popular',
     shop: 'Wellness Store',
-    category: 'Sports',
     brand: 'Adidas'
   },
   {
-    id: 7,
+    productId: '7',
     name: 'Smartphone Case Clear Protection',
-    price: 19.99,
-    originalPrice: 29.99,
+    description: 'Crystal clear protection for your smartphone',
+    price: '19.99',
+    promotional_price: '29.99',
+    quantity: 100,
     image: 'https://images.unsplash.com/photo-1601593346740-925612772716?w=400&h=400&fit=crop',
-    rating: 4.2,
-    reviews: 45,
+    discount: '33',
+    is_active: true,
+    category: { id: 1, name: 'Electronics', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.2,
+    reviewCount: 45,
     badge: 'New',
     shop: 'Mobile Accessories',
-    category: 'Electronics',
     brand: 'Samsung'
   },
   {
-    id: 8,
+    productId: '8',
     name: 'Running Shoes Lightweight',
-    price: 89.99,
-    originalPrice: 139.99,
+    description: 'Lightweight running shoes for optimal performance',
+    price: '89.99',
+    promotional_price: '139.99',
+    quantity: 30,
     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-    rating: 4.7,
-    reviews: 178,
+    discount: '36',
+    is_active: true,
+    category: { id: 4, name: 'Sports', created_at: '', updated_at: '' },
+    tags: [],
+    variants: [],
+    reviews: [],
+    average_rating: 4.7,
+    reviewCount: 178,
     badge: 'Sport',
     shop: 'Athletic Store',
-    category: 'Sports',
     brand: 'Nike'
   }
 ];
@@ -154,11 +213,13 @@ const sortOptions = [
   { value: 'popular', label: 'Most Popular' }
 ];
 
-const ProductCard: React.FC<{ product: typeof products[0]; viewMode: 'grid' | 'list' }> = ({ 
+const ProductCard: React.FC<{ product: Product & { badge: string; shop: string; brand: string; reviewCount: number }; viewMode: 'grid' | 'list' }> = ({ 
   product, 
   viewMode 
 }) => {
-  const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const price = parseFloat(product.price);
+  const originalPrice = product.promotional_price ? parseFloat(product.promotional_price) : price;
+  const discountPercentage = product.promotional_price ? parseInt(product.discount) : 0;
 
   if (viewMode === 'list') {
     return (
@@ -195,7 +256,7 @@ const ProductCard: React.FC<{ product: typeof products[0]; viewMode: 'grid' | 'l
             <div className="flex justify-between">
               <div className="flex-1">
                 <p className="text-xs text-secondary-600 mb-1">{product.shop}</p>
-                <Link to={`/products/${product.id}`}>
+                <Link to={`/products/${product.productId}`}>
                   <h3 className="font-semibold text-lg text-secondary-900 group-hover:text-primary-600 transition-colors mb-2">
                     {product.name}
                   </h3>
@@ -207,29 +268,29 @@ const ProductCard: React.FC<{ product: typeof products[0]; viewMode: 'grid' | 'l
                       <StarIcon
                         key={i}
                         className={`w-4 h-4 ${
-                          i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'
+                          i < Math.floor(product.average_rating || 0) ? 'text-yellow-400' : 'text-gray-200'
                         }`}
                       />
                     ))}
                   </div>
                   <span className="text-sm text-secondary-600 ml-2">
-                    ({product.reviews})
+                    ({product.reviewCount})
                   </span>
                 </div>
                 
                 <div className="flex items-center space-x-2 mb-4">
                   <span className="text-xl font-bold text-secondary-900">
-                    ${product.price}
+                    ${price.toFixed(2)}
                   </span>
-                  {product.originalPrice > product.price && (
+                  {originalPrice > price && (
                     <span className="text-sm text-secondary-500 line-through">
-                      ${product.originalPrice}
+                      ${originalPrice.toFixed(2)}
                     </span>
                   )}
                 </div>
               </div>
               
-              <div className="flex flex-col items-end space-y-2">
+              <div className="flex flex-col items-end justify-between h-full min-w-[120px] pl-4">
                 <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button className="p-2 bg-secondary-100 rounded-full hover:bg-secondary-200 transition-colors">
                     <HeartIcon className="w-4 h-4 text-secondary-600" />
@@ -238,10 +299,9 @@ const ProductCard: React.FC<{ product: typeof products[0]; viewMode: 'grid' | 'l
                     <EyeIcon className="w-4 h-4 text-secondary-600" />
                   </button>
                 </div>
-                <button className="btn-primary">
-                  <ShoppingBagIcon className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </button>
+                <div className="w-full mt-auto pt-2">
+                  <AddToCartButton product={product} size="sm" />
+                </div>
               </div>
             </div>
           </div>
@@ -289,47 +349,48 @@ const ProductCard: React.FC<{ product: typeof products[0]; viewMode: 'grid' | 'l
         )}
       </div>
       
-      <div className="card-body">
-        <div className="mb-2">
+      <div className="card-body p-4">
+        <div className="mb-3">
           <p className="text-xs text-secondary-600 mb-1">{product.shop}</p>
-          <Link to={`/products/${product.id}`}>
+          <Link to={`/products/${product.productId}`}>
             <h3 className="font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors line-clamp-2">
               {product.name}
             </h3>
           </Link>
         </div>
         
-        <div className="flex items-center mb-2">
+        <div className="flex items-center mb-3">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <StarIcon
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'
+                  i < Math.floor(product.average_rating || 0) ? 'text-yellow-400' : 'text-gray-200'
                 }`}
               />
             ))}
           </div>
           <span className="text-sm text-secondary-600 ml-2">
-            ({product.reviews})
+            ({product.reviewCount})
           </span>
         </div>
         
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-secondary-900">
-              ${product.price}
-            </span>
-            {product.originalPrice > product.price && (
-              <span className="text-sm text-secondary-500 line-through">
-                ${product.originalPrice}
+        <div className="flex items-end justify-between gap-3">
+          <div className="flex flex-col space-y-1 flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg font-bold text-secondary-900">
+                ${price.toFixed(2)}
               </span>
-            )}
+              {originalPrice > price && (
+                <span className="text-sm text-secondary-500 line-through">
+                  ${originalPrice.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
-          <button className="btn-primary btn-sm">
-            <ShoppingBagIcon className="w-4 h-4 mr-1" />
-            Add
-          </button>
+          <div className="flex-shrink-0 min-w-[90px]">
+            <AddToCartButton product={product} size="sm" />
+          </div>
         </div>
       </div>
     </div>
@@ -359,25 +420,26 @@ const ProductsPage: React.FC = () => {
   };
 
   const filteredProducts = products.filter(product => {
-    if (selectedCategory !== 'All Categories' && product.category !== selectedCategory) {
+    if (selectedCategory !== 'All Categories' && product.category?.name !== selectedCategory) {
       return false;
     }
     if (selectedBrands.length > 0 && !selectedBrands.includes(product.brand)) {
       return false;
     }
-    if (product.price < priceRange[0] || product.price > priceRange[1]) {
+    const productPrice = parseFloat(product.price);
+    if (productPrice < priceRange[0] || productPrice > priceRange[1]) {
       return false;
     }
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-secondary-50">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-4">Products</h1>
-          <p className="text-secondary-600">
+          <h1 className="text-3xl font-bold text-secondary-900 dark:text-white mb-4">Products</h1>
+          <p className="text-secondary-600 dark:text-secondary-400">
             Showing {filteredProducts.length} of {products.length} products
           </p>
         </div>
@@ -539,7 +601,7 @@ const ProductsPage: React.FC = () => {
                   : 'space-y-4'
               }>
                 {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                  <ProductCard key={product.productId} product={product} viewMode={viewMode} />
                 ))}
               </div>
             ) : (

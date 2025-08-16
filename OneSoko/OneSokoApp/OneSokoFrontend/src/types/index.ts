@@ -18,19 +18,21 @@ export interface UserProfile {
 }
 
 export interface Product {
-  id: number;
+  productId: string;
   name: string;
   description: string;
   price: string;
-  stock_quantity: number;
-  image_url?: string;
-  category: Category;
+  quantity: number;
+  image?: string;
+  discount: string;
+  promotional_price?: string;
+  is_active: boolean;
+  deleted_at?: string;
+  category?: Category;
   tags: Tag[];
   variants: ProductVariant[];
   reviews: Review[];
   average_rating?: number;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Category {
@@ -56,19 +58,30 @@ export interface ProductVariant {
 }
 
 export interface Shop {
-  id: number;
+  shopId: string;
   name: string;
-  description?: string;
-  address?: string;
-  phone_number?: string;
-  email?: string;
+  description: string;
+  location: string;
+  phone: string;
+  email: string;
+  social_link?: string;
+  slug: string;
   shopowner: User;
   products: Product[];
-  logo_url?: string;
-  banner_url?: string;
-  is_verified: boolean;
+  logo?: string;
+  status: 'active' | 'suspended' | 'pending';
+  is_active: boolean;
+  views: number;
+  total_sales: string;
+  total_orders: number;
+  latitude?: string;
+  longitude?: string;
+  street: string;
+  city: string;
+  country: string;
   created_at: string;
-  updated_at: string;
+  deleted_at?: string;
+  products_count?: number;
 }
 
 export interface Review {
@@ -127,6 +140,7 @@ export interface CartItem {
   product: Product;
   variant?: ProductVariant;
   quantity: number;
+  addedAt: string;
 }
 
 export interface Message {

@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse } from 'axios';
 import type { AuthResponse, LoginRequest, RegisterRequest, ShopOwnerRegisterRequest } from '../types';
 
-const API_BASE_URL = 'http://localhost:3001/api'; // Using CORS proxy temporarily
+const API_BASE_URL = 'http://localhost:8000/api'; // Direct Django API
 
 // Create axios instance with default config
 const api = axios.create({
