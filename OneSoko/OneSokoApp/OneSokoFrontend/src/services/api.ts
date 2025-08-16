@@ -1,5 +1,5 @@
 import axios, { type AxiosResponse } from 'axios';
-import type { AuthResponse, LoginRequest, RegisterRequest, ShopOwnerRegisterRequest } from '../types';
+import type { AuthResponse } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000/api'; // Direct Django API
 
@@ -62,23 +62,57 @@ api.interceptors.response.use(
 );
 
 export const authApi = {
-  login: async (credentials: LoginRequest): Promise<AuthResponse> => {
-    const response: AxiosResponse<AuthResponse> = await api.post('/token/', credentials);
+  login: async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+    const response: AxiosResponse<AuthResponse> = await api.post('/auth/login/', credentials);
     return response.data;
   },
 
-  register: async (userData: RegisterRequest): Promise<any> => {
-    const response: AxiosResponse<any> = await api.post('/users/', userData);
+  register: async (userData: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    phone_number?: string;
+    address?: string;
+    date_of_birth?: string;
+  }): Promise<any> => {
+    const response: AxiosResponse<any> = await api.post('/auth/register/', userData);
     return response.data;
   },
 
-  registerShopOwner: async (userData: ShopOwnerRegisterRequest): Promise<any> => {
-    const response: AxiosResponse<any> = await api.post('/shopowners/', userData);
+  registerShopOwner: async (userData: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    phone_number?: string;
+    address?: string;
+    date_of_birth?: string;
+    shop_name: string;
+    shop_description: string;
+    shop_location: string;
+    shop_phone: string;
+    shop_email?: string;
+    shop_social_link?: string;
+    shop_street?: string;
+    shop_city?: string;
+    shop_country?: string;
+  }): Promise<any> => {
+    const response: AxiosResponse<any> = await api.post('/auth/register/shop-owner/', userData);
+    return response.data;
+  },
+
+  oauthLogin: async (provider: string, accessToken: string, userType: string = 'customer'): Promise<any> => {
+    const response: AxiosResponse<any> = await api.post('/auth/oauth/', {
+      provider,
+      access_token: accessToken,
+      user_type: userType
+    });
     return response.data;
   },
 
   refreshToken: async (refreshToken: string): Promise<{ access: string }> => {
-    const response: AxiosResponse<{ access: string }> = await api.post('/token/refresh/', {
+    const response: AxiosResponse<{ access: string }> = await api.post('/auth/token/refresh/', {
       refresh: refreshToken,
     });
     return response.data;

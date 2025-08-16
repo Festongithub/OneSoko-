@@ -58,6 +58,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
 
   const customerNavItems = [
     { name: 'Home', href: '/' },
+    { name: 'Explore', href: '/explore' },
     { name: 'Categories', href: '/categories' },
     { name: 'Shops', href: '/shops' },
     { name: 'About', href: '/about' },
@@ -98,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
           )}
 
           {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-12">
             {navItems.map((item) => (
               <Link
                 key={item.name}

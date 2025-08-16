@@ -168,6 +168,11 @@ export interface AuthResponse {
   access: string;
   refresh: string;
   user: User;
+  profile?: UserProfile;
+  shop?: Shop;
+  is_new_user?: boolean;
+  needs_shop_setup?: boolean;
+  message?: string;
 }
 
 export interface LoginRequest {
