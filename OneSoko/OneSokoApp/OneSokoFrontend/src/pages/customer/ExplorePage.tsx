@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { BuildingStorefrontIcon, ShoppingBagIcon, StarIcon } from '@heroicons/react/24/solid';
 import { Link } from 'react-router-dom';
@@ -16,8 +17,18 @@ interface SearchFilters {
 }
 
 const ExplorePage: React.FC = () => {
-  const [searchType, setSearchType] = useState<'products' | 'shops'>('products');
-  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  
+  // Determine initial search type based on URL
+  const getInitialSearchType = (): 'products' | 'shops' => {
+    if (location.pathname === '/shops') return 'shops';
+    const type = searchParams.get('type');
+    return type === 'shops' ? 'shops' : 'products';
+  };
+
+  const [searchType, setSearchType] = useState<'products' | 'shops'>(getInitialSearchType());
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [products, setProducts] = useState<Product[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +62,21 @@ const ExplorePage: React.FC = () => {
     { label: 'Rating', value: 'rating' },
     { label: 'Popularity', value: 'popularity' }
   ];
+
+  // Handle URL parameter changes
+  useEffect(() => {
+    const query = searchParams.get('q') || '';
+    const type = getInitialSearchType();
+    
+    setSearchQuery(query);
+    setSearchType(type);
+    
+    if (query.trim()) {
+      handleSearch();
+    } else {
+      loadFeaturedItems();
+    }
+  }, [location.pathname, searchParams]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -466,9 +492,8 @@ const ExplorePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {shops.length > 0 ? (
                     shops.map((shop) => (
-                      <Link
+                      <div
                         key={shop.shopId}
-                        to={`/shops/${shop.shopId}`}
                         className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6"
                       >
                         <div className="flex items-center space-x-4 mb-4">
@@ -490,14 +515,14 @@ const ExplorePage: React.FC = () => {
                               {shop.name}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {shop.city}, {shop.country}
+                              {shop.city && shop.country ? `${shop.city}, ${shop.country}` : shop.location || 'Location not specified'}
                             </p>
                           </div>
                         </div>
                         <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
                           {shop.description || 'No description available'}
                         </p>
-                        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
                           <span>{shop.products_count || 0} Products</span>
                           <div className="flex items-center space-x-1">
                             <span className="flex items-center">
@@ -506,7 +531,18 @@ const ExplorePage: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                      </Link>
+                        
+                        {/* Visit Shop Button */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <Link
+                            to={`/shops/${shop.shopId}`}
+                            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
+                          >
+                            <BuildingStorefrontIcon className="w-4 h-4" />
+                            <span>Visit the Shop</span>
+                          </Link>
+                        </div>
+                      </div>
                     ))
                   ) : (
                     <div className="col-span-full text-center py-12">

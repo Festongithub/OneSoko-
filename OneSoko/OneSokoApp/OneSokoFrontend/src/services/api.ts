@@ -85,12 +85,12 @@ export const authApi = {
     password: string;
     first_name: string;
     last_name: string;
-    phone_number?: string;
+    phone_number: string;
     address?: string;
     date_of_birth?: string;
     shop_name: string;
     shop_description: string;
-    shop_location: string;
+    shop_address: string;
     shop_phone: string;
     shop_email?: string;
     shop_social_link?: string;

@@ -30,9 +30,14 @@ export interface Product {
   deleted_at?: string;
   category?: Category;
   tags: Tag[];
-  variants: ProductVariant[];
-  reviews: Review[];
+  variants?: ProductVariant[];
+  reviews?: Review[];
   average_rating?: number;
+  // Additional properties for homepage display
+  originalPrice?: number;
+  rating?: number;
+  badge?: string;
+  shop?: string;
 }
 
 export interface Category {

@@ -1,10 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   XMarkIcon, 
   MinusIcon, 
   PlusIcon, 
   TrashIcon,
-  ShoppingBagIcon 
+  ShoppingBagIcon,
+  EyeIcon 
 } from '@heroicons/react/24/outline';
 import { useCartStore } from '../../stores/cartStore';
 import type { CartItem } from '../../types';
@@ -185,15 +187,26 @@ const CartSidebar: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                <button className="w-full btn-primary">
+                <button className="w-full btn-primary py-3 text-base font-semibold">
                   Proceed to Checkout
                 </button>
-                <button
-                  onClick={clearCart}
-                  className="w-full btn-secondary"
-                >
-                  Clear Cart
-                </button>
+                
+                <div className="flex space-x-2">
+                  <Link 
+                    to="/cart"
+                    onClick={toggleCart}
+                    className="flex-1 btn-secondary py-2 text-sm text-center flex items-center justify-center space-x-1"
+                  >
+                    <EyeIcon className="w-4 h-4" />
+                    <span>View Full Cart</span>
+                  </Link>
+                  <button
+                    onClick={clearCart}
+                    className="flex-1 btn-outline py-2 text-sm border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    Clear Cart
+                  </button>
+                </div>
               </div>
             </div>
           )}

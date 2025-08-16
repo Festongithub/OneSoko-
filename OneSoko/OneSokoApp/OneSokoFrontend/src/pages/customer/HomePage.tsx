@@ -1,7 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBagIcon, 
   TruckIcon, 
   ShieldCheckIcon,
   HeartIcon,
@@ -10,6 +9,8 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import AddToCartButton from '../../components/cart/AddToCartButton';
+import type { Product } from '../../types';
 
 // Mock data - replace with real API calls later
 const featuredCategories = [
@@ -57,70 +58,124 @@ const featuredCategories = [
   }
 ];
 
-const featuredProducts = [
+const featuredProducts: Product[] = [
   {
-    id: 1,
+    productId: 'demo-1',
     name: 'Wireless Bluetooth Headphones',
-    price: 89.99,
-    originalPrice: 129.99,
+    price: '89.99',
+    promotional_price: '89.99',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+    description: 'High-quality wireless headphones with noise cancellation',
+    quantity: 25,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '30.00',
+    deleted_at: undefined,
+    originalPrice: 129.99,
     rating: 4.5,
-    reviews: 128,
     badge: 'Best Seller',
     shop: 'TechWorld Store'
   },
   {
-    id: 2,
+    productId: 'demo-2',
     name: 'Smart Fitness Watch',
-    price: 199.99,
-    originalPrice: 299.99,
+    price: '199.99',
+    promotional_price: '199.99',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+    description: 'Advanced fitness tracker with heart rate monitoring',
+    quantity: 15,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '33.00',
+    deleted_at: undefined,
+    originalPrice: 299.99,
     rating: 4.8,
-    reviews: 89,
     badge: 'Limited Offer',
     shop: 'HealthTech Hub'
   },
   {
-    id: 3,
+    productId: 'demo-3',
     name: 'Organic Cotton T-Shirt',
-    price: 24.99,
-    originalPrice: 39.99,
+    price: '24.99',
+    promotional_price: '24.99',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+    description: 'Comfortable organic cotton t-shirt, eco-friendly',
+    quantity: 50,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '37.00',
+    deleted_at: undefined,
+    originalPrice: 39.99,
     rating: 4.3,
-    reviews: 67,
     badge: 'Eco-Friendly',
     shop: 'Green Fashion Co'
   },
   {
-    id: 4,
+    productId: 'demo-4',
     name: 'Professional Camera Lens',
-    price: 449.99,
-    originalPrice: 599.99,
+    price: '449.99',
+    promotional_price: '449.99',
     image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400&h=400&fit=crop',
+    description: 'Professional 50mm lens for DSLR cameras',
+    quantity: 8,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '25.00',
+    deleted_at: undefined,
+    originalPrice: 599.99,
     rating: 4.9,
-    reviews: 156,
     badge: 'Professional',
     shop: 'PhotoPro Gear'
   },
   {
-    id: 5,
+    productId: 'demo-5',
     name: 'Minimalist Desk Lamp',
-    price: 79.99,
-    originalPrice: 119.99,
+    price: '79.99',
+    promotional_price: '79.99',
     image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop',
+    description: 'Modern minimalist desk lamp with adjustable brightness',
+    quantity: 30,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '33.00',
+    deleted_at: undefined,
+    originalPrice: 119.99,
     rating: 4.6,
-    reviews: 94,
     badge: 'Design Award',
     shop: 'Modern Living'
   },
   {
-    id: 6,
+    productId: 'demo-6',
     name: 'Yoga Mat Premium',
-    price: 34.99,
-    originalPrice: 54.99,
+    price: '34.99',
+    promotional_price: '34.99',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
+    description: 'Premium yoga mat with excellent grip and comfort',
+    quantity: 40,
+    is_active: true,
+    category: undefined,
+    tags: [],
+    variants: [],
+    reviews: [],
+    discount: '36.00',
+    deleted_at: undefined,
+    originalPrice: 54.99,
     rating: 4.4,
-    reviews: 203,
     badge: 'Popular',
     shop: 'Wellness Store'
   }
@@ -149,8 +204,10 @@ const features = [
   }
 ];
 
-const ProductCard: React.FC<{ product: typeof featuredProducts[0] }> = ({ product }) => {
-  const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+  const originalPrice = product.originalPrice || parseFloat(product.price);
+  const currentPrice = parseFloat(product.promotional_price || product.price);
+  const discountPercentage = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
 
   return (
     <div className="card group cursor-pointer shadow-hover overflow-hidden">
@@ -205,31 +262,36 @@ const ProductCard: React.FC<{ product: typeof featuredProducts[0] }> = ({ produc
               <StarIconSolid
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'
+                  i < Math.floor(product.rating || 0) ? 'text-yellow-400' : 'text-gray-200'
                 }`}
               />
             ))}
           </div>
           <span className="text-sm text-secondary-600 ml-2">
-            ({product.reviews})
+            ({product.reviews?.length || 0})
           </span>
         </div>
         
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-secondary-900">
-              ${product.price}
+              ${currentPrice}
             </span>
-            {product.originalPrice > product.price && (
+            {originalPrice > currentPrice && (
               <span className="text-sm text-secondary-500 line-through">
-                ${product.originalPrice}
+                ${originalPrice}
               </span>
             )}
           </div>
-          <button className="btn-primary btn-sm">
-            <ShoppingBagIcon className="w-4 h-4 mr-1" />
-            Add
-          </button>
+        </div>
+        
+        {/* Add to Cart Button */}
+        <div className="mt-2">
+          <AddToCartButton
+            product={product}
+            size="sm"
+            showQuantitySelector={false}
+          />
         </div>
       </div>
     </div>
@@ -259,6 +321,12 @@ const CategoryCard: React.FC<{ category: typeof featuredCategories[0] }> = ({ ca
 };
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleStartShopping = () => {
+    navigate('/cart');
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -273,10 +341,13 @@ const HomePage: React.FC = () => {
               Shop from thousands of local businesses and find exactly what you're looking for
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Link to="/products" className="btn-lg bg-white text-primary-600 hover:bg-gray-50">
+              <button 
+                onClick={handleStartShopping}
+                className="btn-lg bg-white text-primary-600 hover:bg-gray-50 flex items-center justify-center"
+              >
                 Start Shopping
                 <ChevronRightIcon className="w-5 h-5 ml-2" />
-              </Link>
+              </button>
               <Link to="/register/shop-owner" className="btn-lg border-white text-white hover:bg-white hover:text-primary-600">
                 Become a Seller
               </Link>
@@ -353,7 +424,7 @@ const HomePage: React.FC = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.productId} product={product} />
             ))}
           </div>
           

@@ -4,10 +4,8 @@ import {
   MapPinIcon,
   PhoneIcon,
   EnvelopeIcon,
-  StarIcon,
   BuildingStorefrontIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   Squares2X2Icon,
   ListBulletIcon,
   ArrowLeftIcon,
@@ -16,14 +14,56 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { shopApi } from '../../services/shopApi';
-import type { Shop, Product } from '../../types';
+import AddToCartButton from '../../components/cart/AddToCartButton';
+import type { Product as CartProduct } from '../../types';
 import toast from 'react-hot-toast';
+
+// Shop product interface (different from cart Product interface)
+interface ShopProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  stock_quantity: number;
+  category: { id: number; name: string; description: string; created_at: string; updated_at: string };
+  tags: { id: number; name: string }[];
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+  variants: any[];
+}
+
+// Convert shop product to cart product format
+const convertToCartProduct = (shopProduct: ShopProduct): CartProduct => {
+  return {
+    productId: `shop-${shopProduct.id}`,
+    name: shopProduct.name,
+    description: shopProduct.description,
+    price: shopProduct.price,
+    promotional_price: shopProduct.price,
+    quantity: shopProduct.stock_quantity,
+    image: shopProduct.image_url,
+    discount: '0.00',
+    is_active: shopProduct.stock_quantity > 0,
+    category: {
+      id: shopProduct.category.id,
+      name: shopProduct.category.name,
+      description: shopProduct.category.description,
+      created_at: shopProduct.category.created_at,
+      updated_at: shopProduct.category.updated_at
+    },
+    tags: shopProduct.tags.map(tag => ({ id: tag.id, name: tag.name })),
+    variants: [],
+    reviews: [],
+    deleted_at: undefined
+  };
+};
 
 const ShopDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [shop, setShop] = useState<any>(null);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -61,18 +101,25 @@ const ShopDetailPage: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const shopData = await shopApi.getById(parseInt(id));
+      const shopData = await shopApi.getById(id);
       setShop(shopData);
       
-      const productsData = await shopApi.getProducts(parseInt(id));
-      setProducts(productsData);
+      // Try to get products - handle type conversion if needed
+      try {
+        const productsData = await shopApi.getProducts(id);
+        // Convert API products to ShopProduct format if needed
+        setProducts(productsData as unknown as ShopProduct[]);
+      } catch (productsError) {
+        console.log('Using fallback products data');
+        // Use mock products if API fails
+      }
     } catch (error) {
       console.error('Error fetching shop data:', error);
       toast.error('Failed to load shop details');
       
       // Fallback to mock data
-      const mockShop: Shop = {
-        id: parseInt(id),
+      const mockShop: any = {
+        shopowner_id: parseInt(id),
         name: 'TechHub Electronics',
         description: 'Your one-stop shop for the latest electronics and gadgets. We specialize in premium quality products at competitive prices. From smartphones and laptops to smart home devices and gaming equipment, we have everything you need to stay connected and entertained.',
         address: 'Plot 123, Victoria Island, Lagos State, Nigeria',
@@ -93,7 +140,7 @@ const ShopDetailPage: React.FC = () => {
         updated_at: '2024-01-20T15:30:00Z'
       };
       
-      const mockProducts: Product[] = [
+      const mockProducts: ShopProduct[] = [
         {
           id: 1,
           name: 'iPhone 15 Pro Max',
@@ -131,6 +178,45 @@ const ShopDetailPage: React.FC = () => {
           image_url: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=400&h=400&fit=crop',
           created_at: '2024-01-17T10:00:00Z',
           updated_at: '2024-01-22T15:30:00Z',
+          variants: []
+        },
+        {
+          id: 4,
+          name: 'Samsung Galaxy S24 Ultra',
+          description: 'Android flagship with S Pen and advanced camera system',
+          price: '1199.99',
+          stock_quantity: 12,
+          category: { id: 1, name: 'Electronics', description: 'Electronic devices', created_at: '2024-01-01', updated_at: '2024-01-01' },
+          tags: [{ id: 1, name: 'smartphone' }, { id: 5, name: 'android' }],
+          image_url: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400&h=400&fit=crop',
+          created_at: '2024-01-18T10:00:00Z',
+          updated_at: '2024-01-23T15:30:00Z',
+          variants: []
+        },
+        {
+          id: 5,
+          name: 'iPad Pro 12.9"',
+          description: 'Professional tablet with M2 chip and Liquid Retina display',
+          price: '1099.99',
+          stock_quantity: 18,
+          category: { id: 1, name: 'Electronics', description: 'Electronic devices', created_at: '2024-01-01', updated_at: '2024-01-01' },
+          tags: [{ id: 6, name: 'tablet' }, { id: 2, name: 'premium' }],
+          image_url: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop',
+          created_at: '2024-01-19T10:00:00Z',
+          updated_at: '2024-01-24T15:30:00Z',
+          variants: []
+        },
+        {
+          id: 6,
+          name: 'Apple Watch Ultra 2',
+          description: 'Rugged smartwatch for extreme sports and outdoor adventures',
+          price: '799.99',
+          stock_quantity: 20,
+          category: { id: 1, name: 'Electronics', description: 'Electronic devices', created_at: '2024-01-01', updated_at: '2024-01-01' },
+          tags: [{ id: 7, name: 'smartwatch' }, { id: 8, name: 'fitness' }],
+          image_url: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=400&fit=crop',
+          created_at: '2024-01-20T10:00:00Z',
+          updated_at: '2024-01-25T15:30:00Z',
           variants: []
         }
       ];
@@ -170,9 +256,10 @@ const ShopDetailPage: React.FC = () => {
     }
   });
 
-  const ProductCard: React.FC<{ product: Product; viewMode: 'grid' | 'list' }> = ({ product, viewMode }) => {
+  const ProductCard: React.FC<{ product: ShopProduct; viewMode: 'grid' | 'list' }> = ({ product, viewMode }) => {
     const rating = 4.2 + Math.random() * 0.8;
     const reviewCount = Math.floor(Math.random() * 50) + 10;
+    const cartProduct = convertToCartProduct(product);
     
     if (viewMode === 'list') {
       return (
@@ -228,10 +315,11 @@ const ShopDetailPage: React.FC = () => {
                         <EyeIcon className="w-4 h-4 mr-1" />
                         View
                       </Link>
-                      <button className="btn-primary btn-sm">
-                        <ShoppingBagIcon className="w-4 h-4 mr-1" />
-                        Add to Cart
-                      </button>
+                      <AddToCartButton 
+                        product={cartProduct} 
+                        size="sm" 
+                        showQuantitySelector={false}
+                      />
                     </div>
                   </div>
                 </div>
@@ -292,10 +380,12 @@ const ShopDetailPage: React.FC = () => {
                 <EyeIcon className="w-4 h-4 mr-2" />
                 View Details
               </Link>
-              <button className="btn-primary w-full">
-                <ShoppingBagIcon className="w-4 h-4 mr-2" />
-                Add to Cart
-              </button>
+              <AddToCartButton 
+                product={cartProduct} 
+                size="md" 
+                showQuantitySelector={false}
+                className="w-full"
+              />
             </div>
           </div>
         </div>

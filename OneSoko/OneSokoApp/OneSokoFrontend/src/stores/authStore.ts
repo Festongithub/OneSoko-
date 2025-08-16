@@ -36,9 +36,10 @@ interface RegisterUserData {
 }
 
 interface RegisterShopOwnerData extends RegisterUserData {
+  phone_number: string; // Override to make required for shop owners
   shop_name: string;
   shop_description: string;
-  shop_location: string;
+  shop_address: string;
   shop_phone: string;
   shop_email?: string;
   shop_social_link?: string;

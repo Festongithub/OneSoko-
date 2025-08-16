@@ -101,7 +101,42 @@ class Shop(models.Model):
 
     # String representation of the shop, including owner
     def __str__(self):
-        return self.name + "" + self.shopowner.username
+        return f"{self.name} - {self.shopowner.username}"
+
+    @property
+    def owner_full_name(self):
+        """Get the full name of the shop owner."""
+        return f"{self.shopowner.first_name} {self.shopowner.last_name}".strip()
+
+    @property 
+    def owner_contact_info(self):
+        """Get comprehensive contact information for the shop owner."""
+        return {
+            'name': self.owner_full_name,
+            'email': self.shopowner.email,
+            'username': self.shopowner.username,
+            'shop_email': self.email,
+            'shop_phone': self.phone,
+            'personal_phone': getattr(self.shopowner.userprofile, 'phone_number', '') if hasattr(self.shopowner, 'userprofile') else ''
+        }
+
+    @property
+    def full_shop_info(self):
+        """Get complete shop information including owner details."""
+        return {
+            'shop_id': str(self.shopId),
+            'shop_name': self.name,
+            'description': self.description,
+            'location': self.location,
+            'status': self.status,
+            'created_at': self.created_at,
+            'owner': self.owner_contact_info,
+            'analytics': {
+                'views': self.views,
+                'total_sales': float(self.total_sales),
+                'total_orders': self.total_orders
+            }
+        }
 
 # ShopOwner class provides business logic for shop owners
 # Only the shopowner (self.user) can manage their own shops and products
@@ -338,3 +373,187 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:30]}..."
+
+# Shop Review model for customer reviews and ratings
+class ShopReview(models.Model):
+    RATING_CHOICES = [
+        (1, '1 Star - Poor'),
+        (2, '2 Stars - Fair'),
+        (3, '3 Stars - Good'),
+        (4, '4 Stars - Very Good'),
+        (5, '5 Stars - Excellent'),
+    ]
+    
+    # Unique identifier for each review
+    reviewId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    
+    # Customer who wrote the review
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shop_reviews')
+    
+    # Shop being reviewed
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='reviews')
+    
+    # Rating from 1 to 5 stars
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    
+    # Review title
+    title = models.CharField(max_length=200, blank=True)
+    
+    # Review content
+    review_text = models.TextField()
+    
+    # Optional: Order associated with this review (verified purchase)
+    order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='shop_reviews')
+    
+    # Is this a verified purchase review?
+    is_verified_purchase = models.BooleanField(default=False)
+    
+    # Review status
+    STATUS_CHOICES = [
+        ('pending', 'Pending Moderation'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('hidden', 'Hidden by Shop Owner'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Helpful votes from other customers
+    helpful_votes = models.PositiveIntegerField(default=0)
+    
+    # Report count (for inappropriate reviews)
+    report_count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        # One review per customer per shop
+        unique_together = ['customer', 'shop']
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.customer.first_name} - {self.shop.name} ({self.rating} stars)"
+    
+    @property
+    def customer_name(self):
+        """Get the customer's display name."""
+        if self.customer.first_name and self.customer.last_name:
+            return f"{self.customer.first_name} {self.customer.last_name}"
+        return self.customer.username
+    
+    @property
+    def is_recent(self):
+        """Check if review is from the last 30 days."""
+        from django.utils import timezone
+        from datetime import timedelta
+        return self.created_at >= timezone.now() - timedelta(days=30)
+
+# Shop Review Response model for shop owner responses to reviews
+class ShopReviewResponse(models.Model):
+    # Unique identifier for each response
+    responseId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    
+    # Review being responded to
+    review = models.OneToOneField(ShopReview, on_delete=models.CASCADE, related_name='response')
+    
+    # Shop owner (must be the owner of the shop being reviewed)
+    shop_owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='review_responses')
+    
+    # Response text
+    response_text = models.TextField()
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Response by {self.shop_owner.username} to {self.review.customer.username}'s review"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only the shop owner can respond
+        if self.shop_owner != self.review.shop.shopowner:
+            raise ValueError("Only the shop owner can respond to reviews of their shop")
+        super().save(*args, **kwargs)
+
+# Shop Rating Summary model for aggregated ratings
+class ShopRatingSummary(models.Model):
+    # Shop this summary belongs to
+    shop = models.OneToOneField(Shop, on_delete=models.CASCADE, related_name='rating_summary')
+    
+    # Overall average rating
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    
+    # Total number of reviews
+    total_reviews = models.PositiveIntegerField(default=0)
+    
+    # Rating distribution
+    rating_5_count = models.PositiveIntegerField(default=0)
+    rating_4_count = models.PositiveIntegerField(default=0)
+    rating_3_count = models.PositiveIntegerField(default=0)
+    rating_2_count = models.PositiveIntegerField(default=0)
+    rating_1_count = models.PositiveIntegerField(default=0)
+    
+    # Last updated timestamp
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.shop.name} - {self.average_rating} stars ({self.total_reviews} reviews)"
+    
+    def update_rating_summary(self):
+        """Update the rating summary based on approved reviews."""
+        from django.db.models import Avg, Count, Q
+        
+        approved_reviews = self.shop.reviews.filter(status='approved')
+        
+        # Calculate average rating
+        avg_rating = approved_reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+        self.average_rating = round(avg_rating, 2)
+        
+        # Count total reviews
+        self.total_reviews = approved_reviews.count()
+        
+        # Count rating distribution
+        self.rating_5_count = approved_reviews.filter(rating=5).count()
+        self.rating_4_count = approved_reviews.filter(rating=4).count()
+        self.rating_3_count = approved_reviews.filter(rating=3).count()
+        self.rating_2_count = approved_reviews.filter(rating=2).count()
+        self.rating_1_count = approved_reviews.filter(rating=1).count()
+        
+        self.save()
+    
+    @property
+    def rating_percentages(self):
+        """Get rating distribution as percentages."""
+        if self.total_reviews == 0:
+            return {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        
+        return {
+            5: round((self.rating_5_count / self.total_reviews) * 100, 1),
+            4: round((self.rating_4_count / self.total_reviews) * 100, 1),
+            3: round((self.rating_3_count / self.total_reviews) * 100, 1),
+            2: round((self.rating_2_count / self.total_reviews) * 100, 1),
+            1: round((self.rating_1_count / self.total_reviews) * 100, 1),
+        }
+
+# Review Helpful Vote model for customers to mark reviews as helpful
+class ReviewHelpfulVote(models.Model):
+    # Customer who voted
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='helpful_votes')
+    
+    # Review being voted on
+    review = models.ForeignKey(ShopReview, on_delete=models.CASCADE, related_name='helpful_vote_records')
+    
+    # Is this vote helpful or not helpful?
+    is_helpful = models.BooleanField(default=True)
+    
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        # One vote per customer per review
+        unique_together = ['customer', 'review']
+    
+    def __str__(self):
+        helpful_text = "helpful" if self.is_helpful else "not helpful"
+        return f"{self.customer.username} found {self.review.reviewId} {helpful_text}"

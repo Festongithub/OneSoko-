@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { authApi } from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 const ShopOwnerRegister: React.FC = () => {
@@ -31,6 +31,7 @@ const ShopOwnerRegister: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
   const navigate = useNavigate();
+  const { registerShopOwner } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -135,9 +136,8 @@ const ShopOwnerRegister: React.FC = () => {
     setIsLoading(true);
     
     try {
-      await authApi.registerShopOwner({
+      await registerShopOwner({
         // Personal data
-        username: formData.username,
         email: formData.email,
         password: formData.password,
         first_name: formData.firstName,
@@ -149,12 +149,10 @@ const ShopOwnerRegister: React.FC = () => {
         shop_description: formData.shopDescription,
         shop_address: formData.shopAddress,
         shop_phone: formData.shopPhone,
-        business_license: formData.businessLicense || undefined,
-        tax_id: formData.taxId || undefined
       });
 
-      toast.success('Shop registration successful! Please log in to access your shop dashboard.');
-      navigate('/login');
+      toast.success('Shop registration successful! Welcome to your shop dashboard!');
+      navigate('/shop/dashboard');
       
     } catch (error: any) {
       console.error('Shop registration error:', error);

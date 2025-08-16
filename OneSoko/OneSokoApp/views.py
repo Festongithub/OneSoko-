@@ -1,14 +1,16 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .models import (
-    Product, Shop, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, Wishlist, Message, Notification
+    Product, Shop, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, Wishlist, Message, Notification,
+    ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote
 )
 from .serializers import (
-    ProductSerializer, ShopSerializer, CategorySerializer, TagSerializer, ReviewSerializer, ProductVariantSerializer, UserProfileSerializer, OrderSerializer, OrderItemSerializer, PaymentSerializer, WishlistSerializer, MessageSerializer, NotificationSerializer
+    ProductSerializer, ShopSerializer, CategorySerializer, TagSerializer, ReviewSerializer, ProductVariantSerializer, UserProfileSerializer, OrderSerializer, OrderItemSerializer, PaymentSerializer, WishlistSerializer, MessageSerializer, NotificationSerializer,
+    ShopReviewSerializer, ShopReviewCreateSerializer, ShopReviewResponseSerializer, ShopRatingSummarySerializer, ReviewHelpfulVoteSerializer, ShopWithReviewsSerializer
 )
 from django.contrib.auth.models import User
 from .serializers import UserRegistrationSerializer, ShopownerRegistrationSerializer
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework import mixins
 from .permissions import IsShopOwner
 from rest_framework.decorators import action
@@ -333,3 +335,287 @@ class ShopownerRegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericView
     queryset = User.objects.all()
     serializer_class = ShopownerRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+
+# Shop-Owner Information ViewSet (for admin/debugging purposes)
+class ShopOwnerInfoViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet to display shops with comprehensive owner information.
+    Useful for verifying that shops are properly stored with owner credentials.
+    """
+    queryset = Shop.objects.select_related('shopowner').all()
+    serializer_class = ShopSerializer
+    permission_classes = [permissions.AllowAny]  # Change to IsAdminUser in production
+    
+    @action(detail=False, methods=['get'])
+    def with_owners(self, request):
+        """
+        Get all shops with detailed owner information.
+        """
+        shops = Shop.objects.select_related('shopowner__userprofile').all()
+        
+        shop_data = []
+        for shop in shops:
+            shop_info = {
+                'shop_id': str(shop.shopId),
+                'shop_name': shop.name,
+                'shop_description': shop.description,
+                'shop_location': shop.location,
+                'shop_status': shop.status,
+                'shop_created': shop.created_at.isoformat(),
+                'shop_analytics': {
+                    'views': shop.views,
+                    'total_sales': float(shop.total_sales),
+                    'total_orders': shop.total_orders,
+                },
+                'owner_credentials': {
+                    'user_id': shop.shopowner.id,
+                    'username': shop.shopowner.username,
+                    'email': shop.shopowner.email,
+                    'first_name': shop.shopowner.first_name,
+                    'last_name': shop.shopowner.last_name,
+                    'full_name': shop.owner_full_name,
+                    'date_joined': shop.shopowner.date_joined.isoformat(),
+                },
+                'owner_profile': {
+                    'is_shopowner': getattr(shop.shopowner.userprofile, 'is_shopowner', False) if hasattr(shop.shopowner, 'userprofile') else False,
+                    'phone_number': getattr(shop.shopowner.userprofile, 'phone_number', '') if hasattr(shop.shopowner, 'userprofile') else '',
+                    'address': getattr(shop.shopowner.userprofile, 'address', '') if hasattr(shop.shopowner, 'userprofile') else '',
+                },
+                'shop_contact': {
+                    'shop_email': shop.email,
+                    'shop_phone': shop.phone,
+                }
+            }
+            shop_data.append(shop_info)
+        
+        return Response({
+            'count': len(shop_data),
+            'shops_with_owners': shop_data
+        })
+
+    @action(detail=True, methods=['get'])
+    def owner_details(self, request, pk=None):
+        """
+        Get detailed owner information for a specific shop.
+        """
+        shop = self.get_object()
+        return Response(shop.full_shop_info)
+
+
+# Shop Review System ViewSets
+
+class ShopReviewFilter(django_filters.FilterSet):
+    rating = django_filters.NumberFilter()
+    rating_gte = django_filters.NumberFilter(field_name='rating', lookup_expr='gte')
+    rating_lte = django_filters.NumberFilter(field_name='rating', lookup_expr='lte')
+    shop = django_filters.UUIDFilter(field_name='shop__id')
+    user = django_filters.CharFilter(field_name='customer__username', lookup_expr='icontains')
+    is_verified_purchase = django_filters.BooleanFilter()
+    status = django_filters.ChoiceFilter(choices=ShopReview.STATUS_CHOICES)
+    
+    class Meta:
+        model = ShopReview
+        fields = ['rating', 'rating_gte', 'rating_lte', 'shop', 'user', 'is_verified_purchase', 'status']
+
+class ShopReviewViewSet(viewsets.ModelViewSet):
+    queryset = ShopReview.objects.all()
+    serializer_class = ShopReviewSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ShopReviewFilter
+    search_fields = ['title', 'review_text', 'customer__username']
+    ordering_fields = ['created_at', 'rating', 'helpful_votes']
+    ordering = ['-created_at']
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ShopReviewCreateSerializer
+        return ShopReviewSerializer
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+    
+    def perform_create(self, serializer):
+        # Check if user already reviewed this shop
+        shop = serializer.validated_data['shop']
+        if ShopReview.objects.filter(customer=self.request.user, shop=shop).exists():
+            raise serializers.ValidationError("You have already reviewed this shop.")
+        
+        # Check if this is a verified purchase (you can implement this logic based on orders)
+        # For now, we'll set it to False by default
+        is_verified = False  # TODO: Check if user has purchased from this shop
+        
+        serializer.save(customer=self.request.user, is_verified_purchase=is_verified)
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Only show approved reviews to non-owners
+        if not self.request.user.is_authenticated or not hasattr(self.request.user, 'userprofile'):
+            queryset = queryset.filter(status='approved')
+        return queryset
+    
+    @action(detail=False, methods=['get'])
+    def by_shop(self, request):
+        """Get reviews for a specific shop"""
+        shop_id = request.query_params.get('shop_id')
+        if not shop_id:
+            return Response({'error': 'shop_id parameter is required'}, status=400)
+        
+        reviews = self.get_queryset().filter(shop_id=shop_id, status='approved')
+        page = self.paginate_queryset(reviews)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(reviews, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def toggle_helpful(self, request, pk=None):
+        """Toggle helpful vote for a review"""
+        review = self.get_object()
+        
+        # Check if user already voted
+        existing_vote = ReviewHelpfulVote.objects.filter(
+            review=review, customer=request.user
+        ).first()
+        
+        is_helpful = request.data.get('is_helpful', True)
+        
+        if existing_vote:
+            if existing_vote.is_helpful == is_helpful:
+                # Remove vote if same vote
+                existing_vote.delete()
+                action_taken = 'removed'
+            else:
+                # Update vote
+                existing_vote.is_helpful = is_helpful
+                existing_vote.save()
+                action_taken = 'updated'
+        else:
+            # Create new vote
+            ReviewHelpfulVote.objects.create(
+                review=review, customer=request.user, is_helpful=is_helpful
+            )
+            action_taken = 'created'
+        
+        helpful_count = ReviewHelpfulVote.objects.filter(review=review, is_helpful=True).count()
+        return Response({
+            'action': action_taken,
+            'helpful_count': helpful_count,
+            'is_helpful': is_helpful if action_taken != 'removed' else None
+        })
+
+class ShopReviewResponseViewSet(viewsets.ModelViewSet):
+    queryset = ShopReviewResponse.objects.all()
+    serializer_class = ShopReviewResponseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Shop owners can only see responses to reviews of their shops
+        if hasattr(self.request.user, 'userprofile') and self.request.user.userprofile.is_shopowner:
+            # Get shops owned by this user
+            owned_shops = Shop.objects.filter(shopowner=self.request.user)
+            return self.queryset.filter(review__shop__in=owned_shops)
+        return self.queryset.none()
+    
+    def perform_create(self, serializer):
+        review = serializer.validated_data['review']
+        
+        # Check if user owns the shop
+        if not hasattr(self.request.user, 'userprofile') or not self.request.user.userprofile.is_shopowner:
+            raise serializers.ValidationError("Only shop owners can respond to reviews.")
+        
+        owned_shops = Shop.objects.filter(shopowner=self.request.user)
+        if review.shop not in owned_shops:
+            raise serializers.ValidationError("You can only respond to reviews of your shops.")
+        
+        # Check if response already exists
+        if ShopReviewResponse.objects.filter(review=review).exists():
+            raise serializers.ValidationError("A response to this review already exists.")
+        
+        serializer.save(shop_owner=self.request.user)
+
+class ShopRatingSummaryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ShopRatingSummary.objects.all()
+    serializer_class = ShopRatingSummarySerializer
+    permission_classes = [permissions.AllowAny]
+    
+    @action(detail=False, methods=['get'])
+    def by_shop(self, request):
+        """Get rating summary for a specific shop"""
+        shop_id = request.query_params.get('shop_id')
+        if not shop_id:
+            return Response({'error': 'shop_id parameter is required'}, status=400)
+        
+        try:
+            summary = ShopRatingSummary.objects.get(shop_id=shop_id)
+            serializer = self.get_serializer(summary)
+            return Response(serializer.data)
+        except ShopRatingSummary.DoesNotExist:
+            return Response({'error': 'Rating summary not found for this shop'}, status=404)
+
+class ReviewHelpfulVoteViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ReviewHelpfulVote.objects.all()
+    serializer_class = ReviewHelpfulVoteSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        # Filter by review if provided
+        review_id = self.request.query_params.get('review_id')
+        if review_id:
+            return self.queryset.filter(review_id=review_id)
+        return self.queryset
+
+# Enhanced Shop ViewSet with Reviews
+class ShopWithReviewsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Shop.objects.all()
+    serializer_class = ShopWithReviewsSerializer
+    permission_classes = [permissions.AllowAny]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ShopFilter
+    search_fields = ['name', 'description', 'location', 'city', 'country']
+    ordering_fields = ['name', 'created_at', 'rating_summary__average_rating']
+    ordering = ['name']
+    
+    @action(detail=True, methods=['get'])
+    def reviews(self, request, pk=None):
+        """Get all reviews for a specific shop"""
+        shop = self.get_object()
+        reviews = ShopReview.objects.filter(shop=shop, status='approved').order_by('-created_at')
+        
+        page = self.paginate_queryset(reviews)
+        if page is not None:
+            serializer = ShopReviewSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = ShopReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def rating_breakdown(self, request, pk=None):
+        """Get detailed rating breakdown for a shop"""
+        shop = self.get_object()
+        
+        # Get or create rating summary
+        summary, created = ShopRatingSummary.objects.get_or_create(shop=shop)
+        if created or not summary.last_updated:
+            summary.update_summary()
+        
+        return Response({
+            'shop_id': shop.id,
+            'shop_name': shop.name,
+            'total_reviews': summary.total_reviews,
+            'average_rating': summary.average_rating,
+            'rating_distribution': {
+                '5_stars': summary.five_star_percentage,
+                '4_stars': summary.four_star_percentage,
+                '3_stars': summary.three_star_percentage,
+                '2_stars': summary.two_star_percentage,
+                '1_star': summary.one_star_percentage,
+            },
+            'last_updated': summary.last_updated
+        })
