@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
+import { triggerPasswordSave } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const ShopOwnerRegister: React.FC = () => {
@@ -29,6 +30,7 @@ const ShopOwnerRegister: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const navigate = useNavigate();
   const { registerShopOwner } = useAuthStore();
@@ -151,6 +153,11 @@ const ShopOwnerRegister: React.FC = () => {
         shop_phone: formData.shopPhone,
       });
 
+      // Trigger password save for browser
+      if (formRef.current) {
+        triggerPasswordSave(formRef.current);
+      }
+
       toast.success('Shop registration successful! Welcome to your shop dashboard!');
       navigate('/shop/dashboard');
       
@@ -236,7 +243,7 @@ const ShopOwnerRegister: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
         <div className="card">
           <div className="card-body">
-            <form onSubmit={currentStep === 2 ? handleSubmit : undefined} className="space-y-6">
+            <form ref={formRef} onSubmit={currentStep === 2 ? handleSubmit : undefined} className="space-y-6" autoComplete="on">
               {/* Step 1: Personal Information */}
               {currentStep === 1 && (
                 <div className="space-y-6">
@@ -251,6 +258,7 @@ const ShopOwnerRegister: React.FC = () => {
                       id="username"
                       name="username"
                       type="text"
+                      autoComplete="username"
                       required
                       value={formData.username}
                       onChange={handleChange}

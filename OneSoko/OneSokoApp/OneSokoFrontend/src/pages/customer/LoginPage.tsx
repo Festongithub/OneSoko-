@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
 import GoogleOAuthButton from '../../components/auth/GoogleOAuthButton';
 import FacebookOAuthButton from '../../components/auth/FacebookOAuthButton';
 import GitHubOAuthButton from '../../components/auth/GitHubOAuthButton';
+import { triggerPasswordSave } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
@@ -16,6 +17,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loginType, setLoginType] = useState<'customer' | 'shop_owner'>('customer');
+  const formRef = useRef<HTMLFormElement>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,6 +71,11 @@ const LoginPage: React.FC = () => {
     try {
       // Use the auth store login method which handles the API call
       await login(formData.email, formData.password);
+      
+      // Trigger password save for browser
+      if (formRef.current) {
+        triggerPasswordSave(formRef.current);
+      }
       
       toast.success('Login successful!');
       
@@ -186,7 +193,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           {/* Email/Password Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form ref={formRef} className="space-y-6" onSubmit={handleSubmit} autoComplete="on">
             <div>
               <label htmlFor="email" className="label">
                 Email address
@@ -195,7 +202,7 @@ const LoginPage: React.FC = () => {
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="username email"
                 required
                 value={formData.email}
                 onChange={handleChange}

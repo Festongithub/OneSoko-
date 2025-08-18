@@ -13,6 +13,21 @@ from .auth_views import (
     register_shop_owner,
     oauth_login,
     user_profile,
+    get_notifications,
+    mark_notification_read,
+    mark_all_notifications_read,
+    notification_summary,
+    clear_read_notifications,
+    create_test_notifications,
+)
+from .order_management_views import (
+    EnhancedOrderViewSet,
+    create_order_from_cart,
+    order_reports,
+)
+from .analytics_views import (
+    AnalyticsViewSet,
+    generate_sales_forecast,
 )
 
 # Create a router and register our viewsets with it
@@ -25,11 +40,13 @@ router.register(r'reviews', ReviewViewSet)
 router.register(r'variants', ProductVariantViewSet)
 router.register(r'userprofiles', UserProfileViewSet)
 router.register(r'orders', OrderViewSet)
+router.register(r'enhanced-orders', EnhancedOrderViewSet, basename='enhanced-orders')  # Enhanced order management
+router.register(r'analytics', AnalyticsViewSet, basename='analytics')  # Business analytics
 router.register(r'orderitems', OrderItemViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'wishlists', WishlistViewSet)
 router.register(r'messages', MessageViewSet)
-router.register(r'notifications', NotificationViewSet)
+router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'users', UserRegistrationViewSet, basename='user-registration')
 router.register(r'shopowners', ShopownerRegistrationViewSet, basename='shopowner-registration')
 router.register(r'shop-owner-info', ShopOwnerInfoViewSet, basename='shop-owner-info')
@@ -61,4 +78,19 @@ urlpatterns += [
     
     # Profile endpoint
     path('api/auth/profile/', user_profile, name='user_profile'),
+    
+    # Notification endpoints
+    path('api/notifications/', get_notifications, name='get_notifications'),
+    path('api/notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('api/notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('api/notifications/summary/', notification_summary, name='notification_summary'),
+    path('api/notifications/clear-read/', clear_read_notifications, name='clear_read_notifications'),
+    path('api/notifications/create-test/', create_test_notifications, name='create_test_notifications'),
+    
+    # Enhanced Order Management endpoints
+    path('api/orders/create-from-cart/', create_order_from_cart, name='create_order_from_cart'),
+    path('api/orders/reports/', order_reports, name='order_reports'),
+    
+    # Advanced Analytics endpoints
+    path('api/analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
 ] 

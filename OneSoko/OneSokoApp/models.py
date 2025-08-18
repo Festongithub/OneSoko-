@@ -1,7 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.db.models import Sum, Count, Avg, Q, F, Max
 import uuid
 from django.core.serializers import serialize
+from datetime import timedelta
+import json
 
 # Product model represents an item that can be sold in a shop
 class Product(models.Model):
@@ -356,12 +360,34 @@ class Message(models.Model):
 
 # Notification model for shopowners (e.g., new orders, low stock)
 class Notification(models.Model):
+    # Notification type choices
+    TYPE_CHOICES = [
+        ('shop_created', 'Shop Created'),
+        ('new_order', 'New Order'),
+        ('order_status_update', 'Order Status Update'),
+        ('new_review', 'New Review'),
+        ('low_stock', 'Low Stock Alert'),
+        ('out_of_stock', 'Out of Stock'),
+        ('milestone', 'Milestone Achievement'),
+        ('system', 'System Notification'),
+    ]
+    
+    # Priority levels
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
     # User to be notified (shopowner)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     # Notification message
     message = models.TextField()
-    # Type of notification (e.g., 'order', 'low_stock')
-    type = models.CharField(max_length=50)
+    # Type of notification with predefined choices
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='system')
+    # Priority level of the notification
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     # Has the notification been read?
     is_read = models.BooleanField(default=False)
     # Timestamp of the notification
@@ -370,9 +396,43 @@ class Notification(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
+    
+    class Meta:
+        ordering = ['-timestamp']  # Most recent first
+        indexes = [
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['user', 'type']),
+            models.Index(fields=['timestamp']),
+        ]
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:30]}..."
+    
+    @property
+    def priority_icon(self):
+        """Return an icon based on priority level."""
+        icons = {
+            'low': '💬',
+            'medium': '📢',
+            'high': '⚡',
+            'urgent': '🚨'
+        }
+        return icons.get(self.priority, '📢')
+    
+    @property
+    def type_icon(self):
+        """Return an icon based on notification type."""
+        icons = {
+            'shop_created': '🎉',
+            'new_order': '📦',
+            'order_status_update': '📊',
+            'new_review': '📝',
+            'low_stock': '⚠️',
+            'out_of_stock': '🚫',
+            'milestone': '🏆',
+            'system': '🔔'
+        }
+        return icons.get(self.type, '🔔')
 
 # Shop Review model for customer reviews and ratings
 class ShopReview(models.Model):
@@ -544,7 +604,7 @@ class ReviewHelpfulVote(models.Model):
     # Review being voted on
     review = models.ForeignKey(ShopReview, on_delete=models.CASCADE, related_name='helpful_vote_records')
     
-    # Is this vote helpful or not helpful?
+    # Is this vote helpful (True) or not helpful (False)
     is_helpful = models.BooleanField(default=True)
     
     # Timestamp
@@ -555,5 +615,379 @@ class ReviewHelpfulVote(models.Model):
         unique_together = ['customer', 'review']
     
     def __str__(self):
-        helpful_text = "helpful" if self.is_helpful else "not helpful"
-        return f"{self.customer.username} found {self.review.reviewId} {helpful_text}"
+        return f"{self.customer.username} found {self.review.reviewId} helpful"
+
+
+# Order Tracking model for detailed order status tracking
+class OrderTracking(models.Model):
+    TRACKING_STATUS_CHOICES = [
+        ('order_placed', 'Order Placed'),
+        ('payment_confirmed', 'Payment Confirmed'),
+        ('processing', 'Processing'),
+        ('packed', 'Packed'),
+        ('shipped', 'Shipped'),
+        ('in_transit', 'In Transit'),
+        ('out_for_delivery', 'Out for Delivery'),
+        ('delivered', 'Delivered'),
+        ('returned', 'Returned'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    # Order being tracked
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='tracking_entries')
+    
+    # Tracking status
+    status = models.CharField(max_length=50, choices=TRACKING_STATUS_CHOICES)
+    
+    # Description of the tracking update
+    description = models.TextField(blank=True)
+    
+    # Location information
+    location = models.CharField(max_length=255, blank=True)
+    
+    # Tracking number (for shipping)
+    tracking_number = models.CharField(max_length=100, blank=True)
+    
+    # Carrier information (DHL, FedEx, UPS, etc.)
+    carrier = models.CharField(max_length=100, blank=True)
+    
+    # Timestamp of the tracking update
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # User who created the tracking entry (optional)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Additional metadata (JSON field for flexibility)
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['order', 'timestamp']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"Order #{self.order.id} - {self.status} at {self.timestamp}"
+
+
+# Enhanced Order model with additional fields
+class OrderAnalytics(models.Model):
+    """
+    Analytics model for order insights and reporting.
+    """
+    # Order reference
+    order = models.OneToOneField('Order', on_delete=models.CASCADE, related_name='analytics')
+    
+    # Customer analytics
+    customer_type = models.CharField(max_length=50, choices=[
+        ('new', 'New Customer'),
+        ('returning', 'Returning Customer'),
+        ('vip', 'VIP Customer')
+    ], default='new')
+    
+    # Order source
+    order_source = models.CharField(max_length=50, choices=[
+        ('web', 'Website'),
+        ('mobile', 'Mobile App'),
+        ('api', 'API'),
+        ('phone', 'Phone Order'),
+        ('in_store', 'In Store')
+    ], default='web')
+    
+    # Marketing attribution
+    utm_source = models.CharField(max_length=100, blank=True)
+    utm_medium = models.CharField(max_length=100, blank=True)
+    utm_campaign = models.CharField(max_length=100, blank=True)
+    
+    # Financial metrics
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Fulfillment metrics
+    processing_time = models.DurationField(null=True, blank=True)  # Time to process
+    shipping_time = models.DurationField(null=True, blank=True)   # Time to ship
+    delivery_time = models.DurationField(null=True, blank=True)   # Time to deliver
+    
+    # Customer satisfaction
+    rating = models.PositiveSmallIntegerField(null=True, blank=True)  # 1-5 stars
+    feedback = models.TextField(blank=True)
+    
+    # Additional metrics
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    return_reason = models.CharField(max_length=255, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Analytics for Order #{self.order.id}"
+
+
+# Shipping Address model for detailed shipping information
+class ShippingAddress(models.Model):
+    # Order reference
+    order = models.OneToOneField('Order', on_delete=models.CASCADE, related_name='shipping_address')
+    
+    # Recipient information
+    recipient_name = models.CharField(max_length=100)
+    recipient_phone = models.CharField(max_length=20, blank=True)
+    recipient_email = models.EmailField(blank=True)
+    
+    # Address details
+    address_line_1 = models.CharField(max_length=255)
+    address_line_2 = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100)
+    state_province = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100, default='Kenya')
+    
+    # Delivery instructions
+    delivery_instructions = models.TextField(blank=True)
+    
+    # Coordinates (for delivery optimization)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Shipping to {self.recipient_name} - Order #{self.order.id}"
+    
+    @property
+    def full_address(self):
+        """Get formatted full address."""
+        address_parts = [
+            self.address_line_1,
+            self.address_line_2,
+            self.city,
+            self.state_province,
+            self.postal_code,
+            self.country
+        ]
+        return ', '.join(filter(None, address_parts))
+
+
+# === ADVANCED ANALYTICS MODELS ===
+
+class BusinessAnalytics(models.Model):
+    """Store business analytics data for shops"""
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='business_analytics')
+    date = models.DateField(default=timezone.now)
+    
+    # Revenue Metrics
+    total_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    gross_profit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    net_profit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Order Metrics
+    total_orders = models.IntegerField(default=0)
+    completed_orders = models.IntegerField(default=0)
+    cancelled_orders = models.IntegerField(default=0)
+    average_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Customer Metrics
+    new_customers = models.IntegerField(default=0)
+    returning_customers = models.IntegerField(default=0)
+    customer_lifetime_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Product Metrics
+    products_sold = models.IntegerField(default=0)
+    top_selling_product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True, blank=True)
+    inventory_turnover = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    
+    # Traffic Metrics
+    page_views = models.IntegerField(default=0)
+    unique_visitors = models.IntegerField(default=0)
+    conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['shop', 'date']
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.shop.name} Analytics - {self.date}"
+
+
+class CustomerBehaviorAnalytics(models.Model):
+    """Store customer behavior analytics"""
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='behavior_analytics')
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='customer_behavior_analytics')
+    
+    # Purchase Behavior
+    total_orders = models.IntegerField(default=0)
+    total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    average_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_order_date = models.DateTimeField(null=True, blank=True)
+    
+    # Engagement Metrics
+    first_purchase_date = models.DateTimeField(null=True, blank=True)
+    last_login_date = models.DateTimeField(null=True, blank=True)
+    total_sessions = models.IntegerField(default=0)
+    pages_viewed = models.IntegerField(default=0)
+    
+    # Segmentation
+    customer_segment = models.CharField(max_length=50, choices=[
+        ('new', 'New Customer'),
+        ('regular', 'Regular Customer'),
+        ('vip', 'VIP Customer'),
+        ('at_risk', 'At Risk'),
+        ('churned', 'Churned'),
+    ], default='new')
+    
+    # Preferences
+    preferred_categories = models.JSONField(default=list, blank=True)
+    favorite_products = models.JSONField(default=list, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['customer', 'shop']
+
+    def __str__(self):
+        return f"{self.customer.username} - {self.shop.name} Analytics"
+
+
+class ProductPerformanceAnalytics(models.Model):
+    """Store product performance analytics"""
+    product = models.OneToOneField('Product', on_delete=models.CASCADE, related_name='performance_analytics')
+    
+    # Sales Metrics
+    total_sold = models.IntegerField(default=0)
+    total_revenue = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    total_reviews = models.IntegerField(default=0)
+    
+    # Inventory Metrics
+    current_stock = models.IntegerField(default=0)
+    low_stock_threshold = models.IntegerField(default=10)
+    reorder_point = models.IntegerField(default=5)
+    turnover_rate = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    
+    # Performance Metrics
+    views_count = models.IntegerField(default=0)
+    conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    cart_abandonment_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    # Trending
+    weekly_trend = models.CharField(max_length=20, choices=[
+        ('up', 'Trending Up'),
+        ('down', 'Trending Down'),
+        ('stable', 'Stable'),
+    ], default='stable')
+    
+    last_sale_date = models.DateTimeField(null=True, blank=True)
+    peak_sales_period = models.CharField(max_length=100, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.product.name} Performance Analytics"
+
+    @property
+    def is_low_stock(self):
+        return self.current_stock <= self.low_stock_threshold
+
+    @property
+    def needs_reorder(self):
+        return self.current_stock <= self.reorder_point
+
+
+class SalesForecasting(models.Model):
+    """Store sales forecasting data"""
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='sales_forecasts')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='sales_forecasts', null=True, blank=True)
+    
+    forecast_date = models.DateField()
+    forecast_type = models.CharField(max_length=20, choices=[
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+    ])
+    
+    # Forecasted Metrics
+    predicted_revenue = models.DecimalField(max_digits=12, decimal_places=2)
+    predicted_orders = models.IntegerField()
+    predicted_units_sold = models.IntegerField(null=True, blank=True)
+    confidence_level = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    # Actual vs Predicted (filled after the period)
+    actual_revenue = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    actual_orders = models.IntegerField(null=True, blank=True)
+    actual_units_sold = models.IntegerField(null=True, blank=True)
+    accuracy_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['shop', 'product', 'forecast_date', 'forecast_type']
+        ordering = ['-forecast_date']
+
+    def __str__(self):
+        product_name = self.product.name if self.product else "All Products"
+        return f"{self.shop.name} - {product_name} Forecast ({self.forecast_date})"
+
+
+class MarketingCampaignAnalytics(models.Model):
+    """Track marketing campaigns and their performance"""
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='marketing_campaigns')
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    
+    campaign_type = models.CharField(max_length=50, choices=[
+        ('email', 'Email Marketing'),
+        ('social', 'Social Media'),
+        ('sms', 'SMS Marketing'),
+        ('discount', 'Discount Campaign'),
+        ('seasonal', 'Seasonal Campaign'),
+        ('product_launch', 'Product Launch'),
+    ])
+    
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Performance Metrics
+    impressions = models.IntegerField(default=0)
+    clicks = models.IntegerField(default=0)
+    conversions = models.IntegerField(default=0)
+    revenue_generated = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cost_per_acquisition = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    return_on_investment = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    
+    status = models.CharField(max_length=20, choices=[
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], default='draft')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.shop.name} - {self.name}"
+
+    @property
+    def click_through_rate(self):
+        if self.impressions > 0:
+            return (self.clicks / self.impressions) * 100
+        return 0
+
+    @property
+    def conversion_rate(self):
+        if self.clicks > 0:
+            return (self.conversions / self.clicks) * 100
+        return 0

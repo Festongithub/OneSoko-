@@ -5,6 +5,7 @@ import { BuildingStorefrontIcon, ShoppingBagIcon, StarIcon } from '@heroicons/re
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import AddToCartButton from '../../components/cart/AddToCartButton';
+import FloatingAboutButton from '../../components/FloatingAboutButton';
 import type { Product, Shop } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -498,9 +499,9 @@ const ExplorePage: React.FC = () => {
                       >
                         <div className="flex items-center space-x-4 mb-4">
                           <div className="w-16 h-16 bg-primary-600 rounded-lg flex items-center justify-center">
-                            {shop.logo ? (
+                            {shop.logo_url ? (
                               <img
-                                src={shop.logo}
+                                src={shop.logo_url}
                                 alt={shop.name}
                                 className="w-full h-full object-cover rounded-lg"
                               />
@@ -561,6 +562,9 @@ const ExplorePage: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* Floating About Button */}
+      <FloatingAboutButton />
     </div>
   );
 };

@@ -24,15 +24,22 @@ import LoginPage from './pages/customer/LoginPage';
 import CustomerRegister from './pages/customer/CustomerRegister';
 import SignupSelection from './pages/customer/SignupSelection';
 import ShopOwnerRegister from './pages/shop-owner/ShopOwnerRegister';
+import ReviewsTestPage from './pages/ReviewsTestPage';
 
 // Shop Owner Pages
 import ShopDashboard from './pages/shop-owner/ShopDashboard';
 import ShopProducts from './pages/shop-owner/ShopProducts';
 import AddProduct from './pages/shop-owner/AddProduct';
 import EditProduct from './pages/shop-owner/EditProduct';
-import ShopOrders from './pages/shop-owner/ShopOrders';
 import ShopSettings from './pages/shop-owner/ShopSettings';
 import ShopAnalytics from './pages/shop-owner/ShopAnalytics';
+import AdvancedAnalyticsDashboard from './pages/shop-owner/AdvancedAnalyticsDashboard';
+
+// Enhanced Order Management Pages
+import OrderManagementPage from './pages/shop/OrderManagementPage';
+import OrderDetailPage from './pages/shop/OrderDetailPage';
+import OrderTrackingPage from './pages/customer/OrderTrackingPage';
+import OrderLookupPage from './pages/customer/OrderLookupPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -157,9 +164,25 @@ function App() {
                   path="/shop/orders" 
                   element={
                     <ProtectedRoute requireShopOwner={true}>
-                      <ShopOrders />
+                      <OrderManagementPage />
                     </ProtectedRoute>
                   } 
+                />
+                <Route 
+                  path="/shop/orders/:id" 
+                  element={
+                    <ProtectedRoute requireShopOwner={true}>
+                      <OrderDetailPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/customer/orders/:id/track" 
+                  element={<OrderTrackingPage />} 
+                />
+                <Route 
+                  path="/track-order" 
+                  element={<OrderLookupPage />} 
                 />
                 <Route 
                   path="/shop/settings" 
@@ -177,8 +200,17 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                <Route 
+                  path="/shop/advanced-analytics" 
+                  element={
+                    <ProtectedRoute requireShopOwner={true}>
+                      <AdvancedAnalyticsDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
                 
                 <Route path="/test" element={<TestComponent />} />
+                <Route path="/reviews-demo" element={<ReviewsTestPage />} />
                 <Route path="*" element={<HomePage />} />
               </Routes>
             </main>

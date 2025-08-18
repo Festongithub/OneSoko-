@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import (
     Product, Shop, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, Wishlist, Message, Notification,
     ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote
@@ -321,8 +323,111 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 # Notification ViewSet
 class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """
+        Return notifications for the current user only.
+        Filter by type and read status if provided.
+        """
+        user = self.request.user
+        queryset = Notification.objects.filter(user=user)
+        
+        # Filter by notification type
+        notification_type = self.request.query_params.get('type', None)
+        if notification_type:
+            queryset = queryset.filter(type=notification_type)
+        
+        # Filter by read status
+        is_read = self.request.query_params.get('is_read', None)
+        if is_read is not None:
+            queryset = queryset.filter(is_read=is_read.lower() == 'true')
+        
+        # Filter by priority
+        priority = self.request.query_params.get('priority', None)
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        return queryset.order_by('-timestamp')
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read for the current user."""
+        updated_count = Notification.objects.filter(
+            user=request.user, 
+            is_read=False
+        ).update(is_read=True)
+        
+        return Response({
+            'message': f'Marked {updated_count} notifications as read',
+            'updated_count': updated_count
+        })
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark a specific notification as read."""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        
+        return Response({
+            'message': 'Notification marked as read',
+            'notification': self.get_serializer(notification).data
+        })
+    
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """Get count of unread notifications for the current user."""
+        count = Notification.objects.filter(
+            user=request.user, 
+            is_read=False
+        ).count()
+        
+        return Response({'unread_count': count})
+    
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Get notification summary with counts by type and priority."""
+        from django.db.models import Count
+        
+        user = request.user
+        
+        # Count by type
+        type_counts = Notification.objects.filter(user=user, is_read=False)\
+            .values('type')\
+            .annotate(count=Count('type'))\
+            .order_by('type')
+        
+        # Count by priority
+        priority_counts = Notification.objects.filter(user=user, is_read=False)\
+            .values('priority')\
+            .annotate(count=Count('priority'))\
+            .order_by('priority')
+        
+        # Recent notifications (last 5)
+        recent_notifications = Notification.objects.filter(user=user)\
+            .order_by('-timestamp')[:5]
+        
+        return Response({
+            'total_unread': Notification.objects.filter(user=user, is_read=False).count(),
+            'type_counts': list(type_counts),
+            'priority_counts': list(priority_counts),
+            'recent_notifications': self.get_serializer(recent_notifications, many=True).data
+        })
+    
+    @action(detail=False, methods=['delete'])
+    def clear_read(self, request):
+        """Delete all read notifications for the current user."""
+        deleted_count, _ = Notification.objects.filter(
+            user=request.user, 
+            is_read=True
+        ).delete()
+        
+        return Response({
+            'message': f'Deleted {deleted_count} read notifications',
+            'deleted_count': deleted_count
+        })
 
 # User registration viewset
 class UserRegistrationViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -409,13 +514,13 @@ class ShopReviewFilter(django_filters.FilterSet):
     rating_gte = django_filters.NumberFilter(field_name='rating', lookup_expr='gte')
     rating_lte = django_filters.NumberFilter(field_name='rating', lookup_expr='lte')
     shop = django_filters.UUIDFilter(field_name='shop__id')
-    user = django_filters.CharFilter(field_name='customer__username', lookup_expr='icontains')
+    customer = django_filters.CharFilter(field_name='customer__username', lookup_expr='icontains')
     is_verified_purchase = django_filters.BooleanFilter()
     status = django_filters.ChoiceFilter(choices=ShopReview.STATUS_CHOICES)
     
     class Meta:
         model = ShopReview
-        fields = ['rating', 'rating_gte', 'rating_lte', 'shop', 'user', 'is_verified_purchase', 'status']
+        fields = ['rating', 'rating_gte', 'rating_lte', 'shop', 'customer', 'is_verified_purchase', 'status']
 
 class ShopReviewViewSet(viewsets.ModelViewSet):
     queryset = ShopReview.objects.all()

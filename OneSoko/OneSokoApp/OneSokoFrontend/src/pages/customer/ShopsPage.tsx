@@ -172,9 +172,9 @@ const ShopsPage: React.FC = () => {
               {/* Shop Logo */}
               <div className="flex-shrink-0">
                 <div className="w-20 h-20 bg-secondary-200 rounded-lg overflow-hidden">
-                  {shop.logo ? (
+                  {shop.logo_url ? (
                     <img
-                      src={shop.logo}
+                      src={shop.logo_url}
                       alt={shop.name}
                       className="w-full h-full object-cover"
                     />
@@ -254,9 +254,9 @@ const ShopsPage: React.FC = () => {
         <div className="card-body">
           {/* Shop Logo */}
           <div className="w-full h-32 bg-secondary-200 rounded-lg mb-4 overflow-hidden">
-            {shop.logo ? (
+            {shop.logo_url ? (
               <img
-                src={shop.logo}
+                src={shop.logo_url}
                 alt={shop.name}
                 className="w-full h-full object-cover"
               />

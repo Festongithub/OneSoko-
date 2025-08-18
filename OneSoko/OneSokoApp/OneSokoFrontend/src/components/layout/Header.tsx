@@ -12,9 +12,16 @@ import { useAuthStore } from '../../stores/authStore';
 import { useCartStore } from '../../stores/cartStore';
 import { useShopSession } from '../../hooks/useShopSession';
 import ThemeToggle from '../ThemeToggle';
+import AboutIcon from '../icons/AboutIcon';
 
 interface HeaderProps {
   variant?: 'customer' | 'shop-owner';
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }> | null;
 }
 
 const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
@@ -56,19 +63,20 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
     navigate('/');
   };
 
-  const customerNavItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Explore', href: '/explore' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Shops', href: '/shops' },
-    { name: 'About', href: '/about' },
+  const customerNavItems: NavItem[] = [
+    { name: 'Home', href: '/', icon: null },
+    { name: 'Explore', href: '/explore', icon: null },
+    { name: 'Categories', href: '/categories', icon: null },
+    { name: 'Shops', href: '/shops', icon: null },
+    { name: 'Reviews Demo', href: '/reviews-demo', icon: null },
+    { name: 'About', href: '/about', icon: AboutIcon },
   ];
 
-  const shopOwnerNavItems = [
-    { name: 'Dashboard', href: '/shop/dashboard' },
-    { name: 'Products', href: '/shop/products' },
-    { name: 'Orders', href: '/shop/orders' },
-    { name: 'Analytics', href: '/shop/analytics' },
+  const shopOwnerNavItems: NavItem[] = [
+    { name: 'Dashboard', href: '/shop/dashboard', icon: null },
+    { name: 'Products', href: '/shop/products', icon: null },
+    { name: 'Orders', href: '/shop/orders', icon: null },
+    { name: 'Analytics', href: '/shop/analytics', icon: null },
   ];
 
   const navItems = variant === 'shop-owner' ? shopOwnerNavItems : customerNavItems;
@@ -100,15 +108,19 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-12">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="nav-link"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="nav-link flex items-center space-x-2"
+                >
+                  {IconComponent && <IconComponent className="w-4 h-4" />}
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Search Bar - Customer Only */}
@@ -295,16 +307,20 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
 
             {/* Navigation Links */}
             <nav className="space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="block px-3 py-2 text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 rounded-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="flex items-center space-x-3 px-3 py-2 text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-secondary-50 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {IconComponent && <IconComponent className="w-5 h-5" />}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* Auth Actions */}

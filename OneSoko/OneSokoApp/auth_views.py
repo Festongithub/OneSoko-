@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -11,25 +12,48 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 import requests
 import json
-from .models import UserProfile, Shop
-from .serializers import UserProfileSerializer, ShopSerializer
+from .models import UserProfile, Shop, Notification
+from .serializers import UserProfileSerializer, ShopSerializer, NotificationSerializer
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom serializer that uses email instead of username for authentication.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Replace username field with email field
+        self.fields['email'] = self.fields.pop('username')
+        self.fields['email'].help_text = 'Email address'
+    
+    def validate(self, attrs):
+        # Get email and password from attrs
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if email and password:
+            # Set username to email for parent validation since JWT expects username
+            attrs['username'] = email
+        
+        # Call parent validation
+        return super().validate(attrs)
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Custom token view that includes user profile and shop information in the response.
     """
+    serializer_class = CustomTokenObtainPairSerializer
+    
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         
         if response.status_code == 200:
-            # Get the user from the validated data
+            # Get the user from the validated serializer
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
-                user = authenticate(
-                    request=request,
-                    username=request.data.get('email'),
-                    password=request.data.get('password')
-                )
+                # Get user from the serializer's validated data
+                user = serializer.user
                 
                 if user:
                     # Get user profile
@@ -43,7 +67,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     shop_data = None
                     if profile_data and profile_data.get('is_shopowner'):
                         try:
-                            shop = Shop.objects.get(owner=user)
+                            shop = Shop.objects.get(shopowner=user)
                             shop_data = ShopSerializer(shop).data
                         except Shop.DoesNotExist:
                             shop_data = None
@@ -70,7 +94,7 @@ def register_user(request):
         data = request.data
         
         # Validate required fields
-        required_fields = ['email', 'password', 'first_name', 'last_name', 'phone_number']
+        required_fields = ['email', 'password', 'first_name', 'last_name']
         for field in required_fields:
             if not data.get(field):
                 return Response(
@@ -107,11 +131,7 @@ def register_user(request):
             # Create user profile
             profile = UserProfile.objects.create(
                 user=user,
-                phone_number=data['phone_number'],
                 address=data.get('address', ''),
-                date_of_birth=data.get('date_of_birth'),
-                gender=data.get('gender', 'other'),
-                profile_picture=data.get('profile_picture'),
                 is_shopowner=False
             )
         
@@ -147,7 +167,7 @@ def register_shop_owner(request):
         data = request.data
         
         # Validate required fields for user
-        required_user_fields = ['email', 'password', 'first_name', 'last_name', 'phone_number']
+        required_user_fields = ['email', 'password', 'first_name', 'last_name']
         for field in required_user_fields:
             if not data.get(field):
                 return Response(
@@ -156,7 +176,7 @@ def register_shop_owner(request):
                 )
         
         # Validate required fields for shop
-        required_shop_fields = ['shop_name', 'shop_description', 'shop_address']
+        required_shop_fields = ['shop_name', 'shop_description', 'shop_address', 'phone_number']
         for field in required_shop_fields:
             if not data.get(field):
                 return Response(
@@ -200,11 +220,7 @@ def register_shop_owner(request):
             # Create user profile as shop owner
             profile = UserProfile.objects.create(
                 user=user,
-                phone_number=data['phone_number'],
                 address=data.get('address', ''),
-                date_of_birth=data.get('date_of_birth'),
-                gender=data.get('gender', 'other'),
-                profile_picture=data.get('profile_picture'),
                 is_shopowner=True
             )
             
@@ -493,3 +509,241 @@ def get_github_user_info(access_token):
     except Exception as e:
         print(f"Error getting GitHub user info: {e}")
     return None
+
+
+# Notification Management Endpoints
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    """
+    Get notifications for the current user with filtering options.
+    """
+    try:
+        user = request.user
+        
+        # Get query parameters
+        notification_type = request.GET.get('type')
+        is_read = request.GET.get('is_read')
+        priority = request.GET.get('priority')
+        limit = int(request.GET.get('limit', 20))
+        
+        # Base queryset
+        notifications = Notification.objects.filter(user=user)
+        
+        # Apply filters
+        if notification_type:
+            notifications = notifications.filter(type=notification_type)
+        if is_read is not None:
+            notifications = notifications.filter(is_read=is_read.lower() == 'true')
+        if priority:
+            notifications = notifications.filter(priority=priority)
+        
+        # Order by timestamp and limit
+        notifications = notifications.order_by('-timestamp')[:limit]
+        
+        # Serialize and return
+        serializer = NotificationSerializer(notifications, many=True)
+        
+        return Response({
+            'notifications': serializer.data,
+            'total_unread': Notification.objects.filter(user=user, is_read=False).count()
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to get notifications: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request, notification_id):
+    """
+    Mark a specific notification as read.
+    """
+    try:
+        notification = Notification.objects.get(
+            id=notification_id, 
+            user=request.user
+        )
+        notification.is_read = True
+        notification.save()
+        
+        return Response({
+            'message': 'Notification marked as read',
+            'notification': NotificationSerializer(notification).data
+        }, status=status.HTTP_200_OK)
+        
+    except Notification.DoesNotExist:
+        return Response(
+            {'error': 'Notification not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to mark notification as read: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    """
+    Mark all notifications as read for the current user.
+    """
+    try:
+        updated_count = Notification.objects.filter(
+            user=request.user, 
+            is_read=False
+        ).update(is_read=True)
+        
+        return Response({
+            'message': f'Marked {updated_count} notifications as read',
+            'updated_count': updated_count
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to mark notifications as read: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notification_summary(request):
+    """
+    Get notification summary with counts and recent notifications.
+    """
+    try:
+        from django.db.models import Count
+        
+        user = request.user
+        
+        # Count unread notifications by type
+        type_counts = Notification.objects.filter(user=user, is_read=False)\
+            .values('type')\
+            .annotate(count=Count('type'))\
+            .order_by('type')
+        
+        # Count unread notifications by priority
+        priority_counts = Notification.objects.filter(user=user, is_read=False)\
+            .values('priority')\
+            .annotate(count=Count('priority'))\
+            .order_by('priority')
+        
+        # Get recent notifications (last 5)
+        recent_notifications = Notification.objects.filter(user=user)\
+            .order_by('-timestamp')[:5]
+        
+        # Get total counts
+        total_unread = Notification.objects.filter(user=user, is_read=False).count()
+        total_notifications = Notification.objects.filter(user=user).count()
+        
+        return Response({
+            'total_unread': total_unread,
+            'total_notifications': total_notifications,
+            'unread_by_type': list(type_counts),
+            'unread_by_priority': list(priority_counts),
+            'recent_notifications': NotificationSerializer(recent_notifications, many=True).data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to get notification summary: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def clear_read_notifications(request):
+    """
+    Delete all read notifications for the current user.
+    """
+    try:
+        deleted_count, _ = Notification.objects.filter(
+            user=request.user, 
+            is_read=True
+        ).delete()
+        
+        return Response({
+            'message': f'Deleted {deleted_count} read notifications',
+            'deleted_count': deleted_count
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to clear notifications: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_test_notifications(request):
+    """
+    Create test notifications for development purposes.
+    Only available in DEBUG mode.
+    """
+    try:
+        from django.conf import settings
+        
+        if not settings.DEBUG:
+            return Response(
+                {'error': 'Test notifications only available in DEBUG mode'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user = request.user
+        
+        # Create sample notifications
+        test_notifications = [
+            {
+                'message': '🎉 Welcome to OneSoko! Your shop has been created successfully.',
+                'type': 'shop_created',
+                'priority': 'high'
+            },
+            {
+                'message': '📦 New order #12345 received from John Doe for $89.99',
+                'type': 'new_order',
+                'priority': 'high'
+            },
+            {
+                'message': '📝 New 5-star review for "Premium Headphones" from Sarah Smith',
+                'type': 'new_review',
+                'priority': 'low'
+            },
+            {
+                'message': '⚠️ Low stock alert: "Wireless Mouse" has only 3 items left',
+                'type': 'low_stock',
+                'priority': 'high'
+            },
+            {
+                'message': '🏆 Congratulations! You\'ve reached 100 orders milestone.',
+                'type': 'milestone',
+                'priority': 'medium'
+            }
+        ]
+        
+        created_notifications = []
+        for notif_data in test_notifications:
+            notification = Notification.objects.create(
+                user=user,
+                **notif_data
+            )
+            created_notifications.append(notification)
+        
+        return Response({
+            'message': f'Created {len(created_notifications)} test notifications',
+            'notifications': NotificationSerializer(created_notifications, many=True).data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to create test notifications: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

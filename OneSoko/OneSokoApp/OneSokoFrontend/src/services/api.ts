@@ -74,7 +74,6 @@ export const authApi = {
     last_name: string;
     phone_number?: string;
     address?: string;
-    date_of_birth?: string;
   }): Promise<any> => {
     const response: AxiosResponse<any> = await api.post('/auth/register/', userData);
     return response.data;
@@ -87,7 +86,6 @@ export const authApi = {
     last_name: string;
     phone_number: string;
     address?: string;
-    date_of_birth?: string;
     shop_name: string;
     shop_description: string;
     shop_address: string;

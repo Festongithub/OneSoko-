@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
 import GoogleOAuthButton from '../../components/auth/GoogleOAuthButton';
 import FacebookOAuthButton from '../../components/auth/FacebookOAuthButton';
 import GitHubOAuthButton from '../../components/auth/GitHubOAuthButton';
+import { triggerPasswordSave } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const CustomerRegister: React.FC = () => {
@@ -15,13 +16,13 @@ const CustomerRegister: React.FC = () => {
     first_name: '',
     last_name: '',
     phone_number: '',
-    address: '',
-    date_of_birth: ''
+    address: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLFormElement>(null);
 
   const navigate = useNavigate();
   const { register } = useAuthStore();
@@ -90,9 +91,13 @@ const CustomerRegister: React.FC = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         phone_number: formData.phone_number || undefined,
-        address: formData.address || undefined,
-        date_of_birth: formData.date_of_birth || undefined
+        address: formData.address || undefined
       });
+      
+      // Trigger password save for browser
+      if (formRef.current) {
+        triggerPasswordSave(formRef.current);
+      }
       
       toast.success('Account created successfully! Welcome to OneSoko!');
       navigate('/');
@@ -181,7 +186,7 @@ const CustomerRegister: React.FC = () => {
           </div>
 
           {/* Registration Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form ref={formRef} className="space-y-6" onSubmit={handleSubmit} autoComplete="on">
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -192,6 +197,7 @@ const CustomerRegister: React.FC = () => {
                   id="first_name"
                   name="first_name"
                   type="text"
+                  autoComplete="given-name"
                   required
                   value={formData.first_name}
                   onChange={handleChange}
@@ -210,6 +216,7 @@ const CustomerRegister: React.FC = () => {
                   id="last_name"
                   name="last_name"
                   type="text"
+                  autoComplete="family-name"
                   required
                   value={formData.last_name}
                   onChange={handleChange}
@@ -231,7 +238,7 @@ const CustomerRegister: React.FC = () => {
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="username email"
                 required
                 value={formData.email}
                 onChange={handleChange}
@@ -252,6 +259,7 @@ const CustomerRegister: React.FC = () => {
                 id="phone_number"
                 name="phone_number"
                 type="tel"
+                autoComplete="tel"
                 value={formData.phone_number}
                 onChange={handleChange}
                 className="input"
@@ -268,25 +276,11 @@ const CustomerRegister: React.FC = () => {
                 id="address"
                 name="address"
                 type="text"
+                autoComplete="street-address"
                 value={formData.address}
                 onChange={handleChange}
                 className="input"
                 placeholder="123 Main St, City, State"
-              />
-            </div>
-
-            {/* Date of Birth (Optional) */}
-            <div>
-              <label htmlFor="date_of_birth" className="label">
-                Date of Birth
-              </label>
-              <input
-                id="date_of_birth"
-                name="date_of_birth"
-                type="date"
-                value={formData.date_of_birth}
-                onChange={handleChange}
-                className="input"
               />
             </div>
 

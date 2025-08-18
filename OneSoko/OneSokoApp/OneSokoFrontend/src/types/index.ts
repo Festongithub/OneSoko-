@@ -11,7 +11,6 @@ export interface UserProfile {
   user: User;
   phone_number?: string;
   address?: string;
-  date_of_birth?: string;
   is_shopowner: boolean;
   created_at: string;
   updated_at: string;
@@ -74,6 +73,7 @@ export interface Shop {
   shopowner: User;
   products: Product[];
   logo?: string;
+  logo_url?: string;
   status: 'active' | 'suspended' | 'pending';
   is_active: boolean;
   views: number;

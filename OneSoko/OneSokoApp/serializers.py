@@ -42,9 +42,19 @@ class TagSerializer(serializers.ModelSerializer):
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
     shopowner = serializers.StringRelatedField(read_only=True)
+    logo_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = Shop
         fields = '__all__'
+    
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
 
 # UserProfile serializer
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -95,9 +105,47 @@ class MessageSerializer(serializers.ModelSerializer):
 # Notification serializer
 class NotificationSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    shop_name = serializers.CharField(source='shop.name', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    order_id = serializers.IntegerField(source='order.id', read_only=True)
+    priority_icon = serializers.ReadOnlyField()
+    type_icon = serializers.ReadOnlyField()
+    time_ago = serializers.SerializerMethodField()
+    formatted_timestamp = serializers.SerializerMethodField()
+    
     class Meta:
         model = Notification
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'message', 'type', 'priority', 'is_read', 
+            'timestamp', 'shop', 'shop_name', 'product', 'product_name',
+            'order', 'order_id', 'priority_icon', 'type_icon', 
+            'time_ago', 'formatted_timestamp'
+        ]
+    
+    def get_time_ago(self, obj):
+        """Calculate time ago in human-readable format."""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        now = timezone.now()
+        diff = now - obj.timestamp
+        
+        if diff.days > 7:
+            return obj.timestamp.strftime('%B %d, %Y')
+        elif diff.days > 0:
+            return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+        elif diff.seconds > 3600:
+            hours = diff.seconds // 3600
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif diff.seconds > 60:
+            minutes = diff.seconds // 60
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        else:
+            return "Just now"
+    
+    def get_formatted_timestamp(self, obj):
+        """Get formatted timestamp for display."""
+        return obj.timestamp.strftime('%B %d, %Y at %I:%M %p')
 
 # User registration serializer (regular user)
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -148,14 +196,14 @@ class ShopReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopReview
         fields = [
-            'reviewId', 'shop', 'shop_name', 'customer', 'rating', 'title', 'review_text',
+            'id', 'shop', 'shop_name', 'customer', 'rating', 'title', 'review_text',
             'is_verified_purchase', 'status', 'created_at', 'updated_at',
             'helpful_votes_count', 'response'
         ]
         read_only_fields = ['customer', 'is_verified_purchase', 'status', 'created_at', 'updated_at']
     
     def get_helpful_votes_count(self, obj):
-        return obj.helpful_vote_records.count()
+        return obj.helpful_votes.count()
     
     def get_response(self, obj):
         response = ShopReviewResponse.objects.filter(review=obj).first()
@@ -204,7 +252,7 @@ class ReviewHelpfulVoteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ReviewHelpfulVote
-        fields = ['review', 'customer', 'is_helpful', 'created_at']
+        fields = ['id', 'review', 'customer', 'is_helpful', 'created_at']
         read_only_fields = ['customer', 'created_at']
 
 # Combined serializer for shop with review summary
