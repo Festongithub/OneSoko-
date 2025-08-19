@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores/authStore';
-import wishlistApi from '../../services/wishlistApi';
+import wishlistApi from '../../services/wishlistApi.ts';
 
 // Simple Heart Icons (since react-bootstrap-icons might not be available)
 const HeartOutline = ({ className }: { className?: string }) => (

@@ -7,7 +7,6 @@ import {
   LinkIcon,
   CameraIcon,
   PencilIcon,
-  CheckBadgeIcon,
   UserPlusIcon,
   UserMinusIcon,
   ChatBubbleLeftRightIcon,
@@ -22,49 +21,9 @@ import {
 import { useAuthStore } from '../../stores/authStore';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import type { UserProfile } from '../../types';
 import EditProfileModal from '../../components/profile/EditProfileModal';
 import CreatePost from '../../components/profile/CreatePost';
-
-interface UserProfile {
-  id: number;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-    date_joined: string;
-  };
-  bio: string;
-  avatar_url?: string;
-  cover_photo_url?: string;
-  address?: string;
-  phone_number?: string;
-  website?: string;
-  date_of_birth?: string;
-  location?: string;
-  is_shopowner: boolean;
-  is_public: boolean;
-  is_email_verified: boolean;
-  twitter_url?: string;
-  facebook_url?: string;
-  instagram_url?: string;
-  linkedin_url?: string;
-  followers_count: number;
-  following_count: number;
-  is_verified: boolean;
-  verification_type: string;
-  verification_badge: {
-    is_verified: boolean;
-    type?: string;
-    color?: string;
-  };
-  full_name: string;
-  display_name: string;
-  profile_completion_percentage: number;
-  is_following?: boolean;
-  shop?: any;
-}
 
 interface Post {
   id: number;
@@ -391,7 +350,7 @@ const ProfilePage: React.FC = () => {
                 
                 <div className="flex items-center space-x-1">
                   <CalendarIcon className="w-4 h-4" />
-                  <span>Joined {format(new Date(profile.user.date_joined), 'MMMM yyyy')}</span>
+                  <span>Joined {profile.user.date_joined ? format(new Date(profile.user.date_joined), 'MMMM yyyy') : 'Recently'}</span>
                 </div>
 
                 {profile.is_shopowner && (

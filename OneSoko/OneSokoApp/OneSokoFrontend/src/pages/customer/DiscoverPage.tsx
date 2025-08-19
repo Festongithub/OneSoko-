@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   MagnifyingGlassIcon, 
   UserIcon, 
-  UserPlusIcon, 
-  CheckBadgeIcon 
+  UserPlusIcon
 } from '@heroicons/react/24/outline';
 import { CheckBadgeIcon as CheckBadgeIconSolid } from '@heroicons/react/24/solid';
 import { Link } from 'react-router-dom';

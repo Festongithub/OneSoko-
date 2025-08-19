@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores/authStore';
-import wishlistApi from '../../services/wishlistApi';
-import type { WishlistResponse, WishlistStats } from '../../services/wishlistApi';
+import wishlistApi from '../../services/wishlistApi.ts';
+import type { WishlistResponse, WishlistStats } from '../../services/wishlistApi.ts';
 
 // Loading Spinner Component
 const LoadingSpinner: React.FC = () => (

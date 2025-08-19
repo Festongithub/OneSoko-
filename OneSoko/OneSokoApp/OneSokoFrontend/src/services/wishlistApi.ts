@@ -1,3 +1,4 @@
+import type { AxiosResponse } from 'axios';
 import api from './api';
 
 export interface WishlistResponse {
@@ -88,3 +89,5 @@ export const wishlistApi = {
     return response.data;
   }
 };
+
+export default wishlistApi;

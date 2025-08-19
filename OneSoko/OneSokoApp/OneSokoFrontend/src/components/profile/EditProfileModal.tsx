@@ -1,30 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, CameraIcon, UserIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-
-interface UserProfile {
-  id: number;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-  };
-  bio: string;
-  avatar_url?: string;
-  cover_photo_url?: string;
-  address?: string;
-  phone_number?: string;
-  website?: string;
-  date_of_birth?: string;
-  location?: string;
-  is_public: boolean;
-  twitter_url?: string;
-  facebook_url?: string;
-  instagram_url?: string;
-  linkedin_url?: string;
-}
+import type { UserProfile } from '../../types';
 
 interface EditProfileModalProps {
   isOpen: boolean;
