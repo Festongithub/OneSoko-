@@ -68,7 +68,7 @@ const OrderDetailPage: React.FC = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   
   const { orderId } = useParams<{ orderId: string }>();
-  const { token } = useAuthStore();
+  const { accessToken } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const OrderDetailPage: React.FC = () => {
     try {
       const response = await fetch(`/api/enhanced-orders/${orderId}/`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -107,7 +107,7 @@ const OrderDetailPage: React.FC = () => {
       const response = await fetch(`/api/enhanced-orders/${order.id}/update_status/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

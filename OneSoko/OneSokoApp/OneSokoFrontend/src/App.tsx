@@ -41,6 +41,13 @@ import OrderDetailPage from './pages/shop/OrderDetailPage';
 import OrderTrackingPage from './pages/customer/OrderTrackingPage';
 import OrderLookupPage from './pages/customer/OrderLookupPage';
 
+// Customer Loyalty & Rewards Pages
+import CustomerLoyaltyDashboard from './pages/customer/CustomerLoyaltyDashboard';
+import ShopOwnerLoyaltyDashboard from './pages/shop-owner/ShopOwnerLoyaltyDashboard';
+
+// Notifications Pages
+import NotificationsPage from './pages/customer/NotificationsPage';
+
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -205,6 +212,34 @@ function App() {
                   element={
                     <ProtectedRoute requireShopOwner={true}>
                       <AdvancedAnalyticsDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/shop/loyalty" 
+                  element={
+                    <ProtectedRoute requireShopOwner={true}>
+                      <ShopOwnerLoyaltyDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Customer Loyalty Routes */}
+                <Route 
+                  path="/loyalty" 
+                  element={
+                    <ProtectedRoute>
+                      <CustomerLoyaltyDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Notifications Routes */}
+                <Route 
+                  path="/notifications" 
+                  element={
+                    <ProtectedRoute>
+                      <NotificationsPage />
                     </ProtectedRoute>
                   } 
                 />

@@ -29,6 +29,12 @@ from .analytics_views import (
     AnalyticsViewSet,
     generate_sales_forecast,
 )
+from .loyalty_views import (
+    LoyaltyProgramViewSet,
+    CustomerLoyaltyViewSet,
+    process_order_loyalty_points,
+    referral_info,
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -42,6 +48,8 @@ router.register(r'userprofiles', UserProfileViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'enhanced-orders', EnhancedOrderViewSet, basename='enhanced-orders')  # Enhanced order management
 router.register(r'analytics', AnalyticsViewSet, basename='analytics')  # Business analytics
+router.register(r'loyalty-programs', LoyaltyProgramViewSet, basename='loyalty-programs')  # Loyalty program management
+router.register(r'customer-loyalty', CustomerLoyaltyViewSet, basename='customer-loyalty')  # Customer loyalty accounts
 router.register(r'orderitems', OrderItemViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'wishlists', WishlistViewSet)
@@ -93,4 +101,8 @@ urlpatterns += [
     
     # Advanced Analytics endpoints
     path('api/analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
+    
+    # Customer Loyalty & Rewards endpoints
+    path('api/loyalty/process-order-points/', process_order_loyalty_points, name='process_order_loyalty_points'),
+    path('api/loyalty/referral-info/', referral_info, name='referral_info'),
 ] 
