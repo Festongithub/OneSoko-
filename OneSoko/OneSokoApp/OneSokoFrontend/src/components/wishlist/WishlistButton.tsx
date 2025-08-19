@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthSimple } from '../../hooks/useAuth';
-import { wishlistApi } from '../../services/wishlistApi';
+import { useAuthStore } from '../../stores/authStore';
+import wishlistApi from '../../services/wishlistApi';
 
 // Simple Heart Icons (since react-bootstrap-icons might not be available)
 const HeartOutline = ({ className }: { className?: string }) => (
@@ -29,7 +29,7 @@ export const WishlistButton: React.FC<WishlistButtonProps> = ({
   showText = false,
   size = 'md'
 }) => {
-  const { isAuthenticated } = useAuthSimple();
+  const { isAuthenticated } = useAuthStore();
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
