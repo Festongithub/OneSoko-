@@ -25,6 +25,7 @@ import CustomerRegister from './pages/customer/CustomerRegister';
 import SignupSelection from './pages/customer/SignupSelection';
 import ShopOwnerRegister from './pages/shop-owner/ShopOwnerRegister';
 import ReviewsTestPage from './pages/ReviewsTestPage';
+import TestNewsletterPage from './pages/TestNewsletterPage';
 
 // Shop Owner Pages
 import ShopDashboard from './pages/shop-owner/ShopDashboard';
@@ -34,6 +35,7 @@ import EditProduct from './pages/shop-owner/EditProduct';
 import ShopSettings from './pages/shop-owner/ShopSettings';
 import ShopAnalytics from './pages/shop-owner/ShopAnalytics';
 import AdvancedAnalyticsDashboard from './pages/shop-owner/AdvancedAnalyticsDashboard';
+import ReviewManagementPage from './pages/shop-owner/ReviewManagementPage';
 
 // Enhanced Order Management Pages
 import OrderManagementPage from './pages/shop/OrderManagementPage';
@@ -45,8 +47,16 @@ import OrderLookupPage from './pages/customer/OrderLookupPage';
 import CustomerLoyaltyDashboard from './pages/customer/CustomerLoyaltyDashboard';
 import ShopOwnerLoyaltyDashboard from './pages/shop-owner/ShopOwnerLoyaltyDashboard';
 
+// Products Page
+import ProductsPage from './pages/customer/ProductsPage';
+
 // Notifications Pages
 import NotificationsPage from './pages/customer/NotificationsPage';
+
+// Profile Pages
+import ProfilePage from './pages/customer/ProfilePage';
+import FeedPage from './pages/customer/FeedPage';
+import DiscoverPage from './pages/customer/DiscoverPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -126,6 +136,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/search" element={<ExplorePage />} />
+                <Route path="/products" element={<ProductsPage />} />
                 <Route path="/shops" element={<ExplorePage />} />
                 <Route path="/shops/:id" element={<ShopDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
@@ -208,6 +219,14 @@ function App() {
                   } 
                 />
                 <Route 
+                  path="/shop/reviews" 
+                  element={
+                    <ProtectedRoute requireShopOwner={true}>
+                      <ReviewManagementPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/shop/advanced-analytics" 
                   element={
                     <ProtectedRoute requireShopOwner={true}>
@@ -243,9 +262,23 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+
+                {/* Profile and Social Routes */}
+                <Route 
+                  path="/feed" 
+                  element={
+                    <ProtectedRoute>
+                      <FeedPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/discover" element={<DiscoverPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/:username" element={<ProfilePage />} />
                 
                 <Route path="/test" element={<TestComponent />} />
                 <Route path="/reviews-demo" element={<ReviewsTestPage />} />
+                <Route path="/newsletter-test" element={<TestNewsletterPage />} />
                 <Route path="*" element={<HomePage />} />
               </Routes>
             </main>

@@ -67,7 +67,7 @@ ROOT_URLCONF = 'MyOneSoko.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -241,3 +241,17 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development - prints emails to console
+DEFAULT_FROM_EMAIL = 'noreply@onesoko.co.ke'
+SERVER_EMAIL = 'server@onesoko.co.ke'
+
+# For production, uncomment and configure these settings:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # or your email provider
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-email-password'

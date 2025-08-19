@@ -1,9 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, WishlistViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet, ShopownerRegistrationViewSet, ShopOwnerInfoViewSet,
-    ShopReviewViewSet, ShopReviewResponseViewSet, ShopRatingSummaryViewSet, ReviewHelpfulVoteViewSet, ShopWithReviewsViewSet
+    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet, ShopownerRegistrationViewSet, ShopOwnerInfoViewSet,
+    ShopReviewViewSet, ShopReviewResponseViewSet, ShopRatingSummaryViewSet, ReviewHelpfulVoteViewSet, ShopWithReviewsViewSet,
+    EmailSubscriptionCreateView, EmailSubscriptionConfirmView, EmailSubscriptionUnsubscribeView, EmailSubscriptionStatusView
 )
+from .wishlist_views import WishlistViewSet
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -35,6 +37,19 @@ from .loyalty_views import (
     process_order_loyalty_points,
     referral_info,
 )
+from .profile_views import (
+    user_profile_detail,
+    public_profile_detail,
+    follow_user,
+    unfollow_user,
+    user_followers,
+    user_following,
+    UserPostViewSet,
+    user_feed,
+    user_posts,
+    profile_stats,
+    search_users,
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -52,7 +67,7 @@ router.register(r'loyalty-programs', LoyaltyProgramViewSet, basename='loyalty-pr
 router.register(r'customer-loyalty', CustomerLoyaltyViewSet, basename='customer-loyalty')  # Customer loyalty accounts
 router.register(r'orderitems', OrderItemViewSet)
 router.register(r'payments', PaymentViewSet)
-router.register(r'wishlists', WishlistViewSet)
+router.register(r'wishlists', WishlistViewSet, basename='wishlist')
 router.register(r'messages', MessageViewSet)
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'users', UserRegistrationViewSet, basename='user-registration')
@@ -65,6 +80,9 @@ router.register(r'shop-review-responses', ShopReviewResponseViewSet, basename='s
 router.register(r'shop-rating-summaries', ShopRatingSummaryViewSet, basename='shop-rating-summaries')
 router.register(r'review-helpful-votes', ReviewHelpfulVoteViewSet, basename='review-helpful-votes')
 router.register(r'shops-with-reviews', ShopWithReviewsViewSet, basename='shops-with-reviews')
+
+# Profile and Social Features
+router.register(r'posts', UserPostViewSet, basename='posts')  # User posts/tweets
 
 # The API URLs are now determined automatically by the router
 urlpatterns = [
@@ -105,4 +123,22 @@ urlpatterns += [
     # Customer Loyalty & Rewards endpoints
     path('api/loyalty/process-order-points/', process_order_loyalty_points, name='process_order_loyalty_points'),
     path('api/loyalty/referral-info/', referral_info, name='referral_info'),
+    
+    # Email Subscription endpoints
+    path('api/email-subscription/subscribe/', EmailSubscriptionCreateView.as_view(), name='email-subscription-create'),
+    path('api/email-subscription/confirm/', EmailSubscriptionConfirmView.as_view(), name='email-subscription-confirm'),
+    path('api/email-subscription/unsubscribe/', EmailSubscriptionUnsubscribeView.as_view(), name='email-subscription-unsubscribe'),
+    path('api/email-subscription/status/', EmailSubscriptionStatusView.as_view(), name='email-subscription-status'),
+    
+    # Profile and Social Media endpoints
+    path('api/profile/', user_profile_detail, name='user-profile-detail'),
+    path('api/profile/<str:username>/', public_profile_detail, name='public-profile-detail'),
+    path('api/profile/<str:username>/follow/', follow_user, name='follow-user'),
+    path('api/profile/<str:username>/unfollow/', unfollow_user, name='unfollow-user'),
+    path('api/profile/<str:username>/followers/', user_followers, name='user-followers'),
+    path('api/profile/<str:username>/following/', user_following, name='user-following'),
+    path('api/profile/<str:username>/posts/', user_posts, name='user-posts'),
+    path('api/profile/<str:username>/stats/', profile_stats, name='profile-stats'),
+    path('api/feed/', user_feed, name='user-feed'),
+    path('api/search/users/', search_users, name='search-users'),
 ] 

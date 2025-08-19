@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react';
 
 interface Review {
-  id: string;
+  reviewId: string;
   customer: string;
   rating: number;
   title: string;
@@ -253,7 +253,7 @@ const ShopReviews: React.FC<ShopReviewsProps> = ({ shopId }) => {
           </div>
         ) : (
           reviews.map((review) => (
-            <div key={review.id} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+            <div key={review.reviewId} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <div className="flex items-center space-x-2">
@@ -298,14 +298,14 @@ const ShopReviews: React.FC<ShopReviewsProps> = ({ shopId }) => {
               {/* Helpful Buttons */}
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => toggleHelpful(review.id, true)}
+                  onClick={() => toggleHelpful(review.reviewId, true)}
                   className="flex items-center space-x-1 text-sm text-gray-600 hover:text-green-600 transition-colors"
                 >
                   <ThumbsUp className="w-4 h-4" />
                   <span>Helpful ({review.helpful_votes_count})</span>
                 </button>
                 <button
-                  onClick={() => toggleHelpful(review.id, false)}
+                  onClick={() => toggleHelpful(review.reviewId, false)}
                   className="flex items-center space-x-1 text-sm text-gray-600 hover:text-red-600 transition-colors"
                 >
                   <ThumbsDown className="w-4 h-4" />

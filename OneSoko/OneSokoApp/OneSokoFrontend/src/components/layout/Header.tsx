@@ -65,6 +65,8 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
 
   const customerNavItems: NavItem[] = [
     { name: 'Home', href: '/', icon: null },
+    { name: 'Feed', href: '/feed', icon: null },
+    { name: 'Discover', href: '/discover', icon: null },
     { name: 'Explore', href: '/explore', icon: null },
     { name: 'Categories', href: '/categories', icon: null },
     { name: 'Shops', href: '/shops', icon: null },

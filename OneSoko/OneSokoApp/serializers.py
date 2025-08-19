@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     Product, Shop, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, Wishlist, Message, Notification,
-    ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote
+    ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote, EmailSubscription,
+    UserFollow, UserPost, PostLike, PostReply
 )
 from django.contrib.auth.models import User
 
@@ -22,9 +23,23 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
+    shops = serializers.SerializerMethodField()
+    
     class Meta:
         model = Product
         fields = '__all__'
+    
+    def get_shops(self, obj):
+        """Get the shops where this product is available"""
+        shops = obj.shops.filter(is_active=True, status='active')
+        return [{
+            'shopId': str(shop.shopId),
+            'name': shop.name,
+            'location': shop.location,
+            'city': shop.city,
+            'country': shop.country,
+            'logo_url': self.context.get('request').build_absolute_uri(shop.logo.url) if shop.logo and self.context.get('request') else None
+        } for shop in shops]
 
 # Category serializer
 class CategorySerializer(serializers.ModelSerializer):
@@ -59,9 +74,124 @@ class ShopSerializer(serializers.ModelSerializer):
 # UserProfile serializer
 class UserProfileSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    avatar_url = serializers.SerializerMethodField()
+    cover_photo_url = serializers.SerializerMethodField()
+    full_name = serializers.ReadOnlyField()
+    display_name = serializers.ReadOnlyField()
+    profile_completion_percentage = serializers.ReadOnlyField()
+    verification_badge = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'bio', 'avatar', 'avatar_url', 'cover_photo', 'cover_photo_url',
+            'address', 'phone_number', 'website', 'date_of_birth', 'location',
+            'is_shopowner', 'is_public', 'is_email_verified', 'date_joined',
+            'last_active', 'twitter_url', 'facebook_url', 'instagram_url', 'linkedin_url',
+            'followers_count', 'following_count', 'is_verified', 'verification_type',
+            'full_name', 'display_name', 'profile_completion_percentage', 'verification_badge'
+        ]
+        read_only_fields = ['date_joined', 'last_active', 'followers_count', 'following_count']
+
+    def get_avatar_url(self, obj):
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+
+    def get_cover_photo_url(self, obj):
+        if obj.cover_photo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_photo.url)
+            return obj.cover_photo.url
+        return None
+
+    def get_verification_badge(self, obj):
+        return obj.get_verification_badge()
+
+# Enhanced User serializer for profile contexts
+class UserDetailSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'profile']
+        read_only_fields = ['date_joined']
+
+# User Follow serializer
+class UserFollowSerializer(serializers.ModelSerializer):
+    follower = UserDetailSerializer(read_only=True)
+    following = UserDetailSerializer(read_only=True)
+    follower_id = serializers.IntegerField(write_only=True)
+    following_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = UserFollow
+        fields = ['id', 'follower', 'following', 'follower_id', 'following_id', 
+                 'created_at', 'notifications_enabled']
+        read_only_fields = ['created_at']
+
+# User Post serializer
+class UserPostSerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer(read_only=True)
+    image_url = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
+    related_product = ProductSerializer(read_only=True)
+    related_shop = ShopSerializer(read_only=True)
+    
+    class Meta:
+        model = UserPost
+        fields = [
+            'id', 'user', 'content', 'image', 'image_url', 'post_type',
+            'likes_count', 'reposts_count', 'replies_count', 'created_at', 'updated_at',
+            'is_deleted', 'related_product', 'related_shop', 'is_liked', 'can_edit'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'likes_count', 'reposts_count', 'replies_count']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+    def get_is_liked(self, obj):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and user.is_authenticated:
+            return PostLike.objects.filter(user=user, post=obj).exists()
+        return False
+
+    def get_can_edit(self, obj):
+        user = self.context.get('request').user if self.context.get('request') else None
+        return user == obj.user if user else False
+
+# Post Like serializer
+class PostLikeSerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer(read_only=True)
+    
+    class Meta:
+        model = PostLike
+        fields = ['id', 'user', 'post', 'created_at']
+        read_only_fields = ['created_at']
+
+# Post Reply serializer
+class PostReplySerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer(read_only=True)
+    can_edit = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PostReply
+        fields = ['id', 'user', 'post', 'content', 'created_at', 'is_deleted', 'can_edit']
+        read_only_fields = ['created_at']
+
+    def get_can_edit(self, obj):
+        user = self.context.get('request').user if self.context.get('request') else None
+        return user == obj.user if user else False
 
 # OrderItem serializer
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -196,14 +326,14 @@ class ShopReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopReview
         fields = [
-            'id', 'shop', 'shop_name', 'customer', 'rating', 'title', 'review_text',
+            'reviewId', 'shop', 'shop_name', 'customer', 'rating', 'title', 'review_text',
             'is_verified_purchase', 'status', 'created_at', 'updated_at',
             'helpful_votes_count', 'response'
         ]
         read_only_fields = ['customer', 'is_verified_purchase', 'status', 'created_at', 'updated_at']
     
     def get_helpful_votes_count(self, obj):
-        return obj.helpful_votes.count()
+        return obj.helpful_vote_records.filter(is_helpful=True).count()
     
     def get_response(self, obj):
         response = ShopReviewResponse.objects.filter(review=obj).first()
@@ -238,14 +368,36 @@ class ShopReviewResponseSerializer(serializers.ModelSerializer):
         read_only_fields = ['shop_owner', 'created_at', 'updated_at']
 
 class ShopRatingSummarySerializer(serializers.ModelSerializer):
+    five_star_percentage = serializers.SerializerMethodField()
+    four_star_percentage = serializers.SerializerMethodField()
+    three_star_percentage = serializers.SerializerMethodField()
+    two_star_percentage = serializers.SerializerMethodField()
+    one_star_percentage = serializers.SerializerMethodField()
+    
     class Meta:
         model = ShopRatingSummary
         fields = [
             'id', 'shop', 'total_reviews', 'average_rating',
+            'rating_5_count', 'rating_4_count', 'rating_3_count', 'rating_2_count', 'rating_1_count',
             'five_star_percentage', 'four_star_percentage', 'three_star_percentage',
             'two_star_percentage', 'one_star_percentage', 'last_updated'
         ]
         read_only_fields = ['last_updated']
+    
+    def get_five_star_percentage(self, obj):
+        return obj.rating_percentages[5]
+    
+    def get_four_star_percentage(self, obj):
+        return obj.rating_percentages[4]
+    
+    def get_three_star_percentage(self, obj):
+        return obj.rating_percentages[3]
+    
+    def get_two_star_percentage(self, obj):
+        return obj.rating_percentages[2]
+    
+    def get_one_star_percentage(self, obj):
+        return obj.rating_percentages[1]
 
 class ReviewHelpfulVoteSerializer(serializers.ModelSerializer):
     customer = serializers.StringRelatedField(read_only=True)
@@ -270,3 +422,37 @@ class ShopWithReviewsSerializer(serializers.ModelSerializer):
             status='approved'
         ).order_by('-created_at')[:3]
         return ShopReviewSerializer(recent_reviews, many=True).data
+
+
+# Email Subscription serializer
+class EmailSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailSubscription
+        fields = [
+            'subscriptionId', 'email', 'subscription_types', 'is_active',
+            'created_at', 'updated_at', 'confirmed_at', 'is_confirmed'
+        ]
+        read_only_fields = ['subscriptionId', 'created_at', 'updated_at', 'confirmed_at']
+    
+    is_confirmed = serializers.SerializerMethodField()
+    
+    def get_is_confirmed(self, obj):
+        return obj.is_confirmed()
+    
+    def validate_email(self, value):
+        """Validate email format and check for existing subscriptions"""
+        if EmailSubscription.objects.filter(email=value, is_active=True).exists():
+            raise serializers.ValidationError("This email is already subscribed to our newsletter.")
+        return value
+    
+    def validate_subscription_types(self, value):
+        """Validate subscription types"""
+        valid_types = [choice[0] for choice in EmailSubscription.SUBSCRIPTION_TYPES]
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Subscription types must be a list.")
+        
+        for subscription_type in value:
+            if subscription_type not in valid_types:
+                raise serializers.ValidationError(f"Invalid subscription type: {subscription_type}")
+        
+        return value

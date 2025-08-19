@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import Shop, Order, Review, Notification, OrderItem
+from .models import Shop, Order, Review, Notification, OrderItem, ShopReview, ShopRatingSummary, ShopReviewResponse
 
 
 @receiver(post_save, sender=Shop)
@@ -180,3 +180,44 @@ def create_milestone_notifications(sender, instance, created, **kwargs):
                 priority='medium',
                 shop=shop
             )
+
+
+@receiver(post_save, sender=ShopReview)
+def update_shop_rating_summary_on_review_save(sender, instance, created, **kwargs):
+    """
+    Update shop rating summary when a review is created or updated.
+    """
+    try:
+        summary, created = ShopRatingSummary.objects.get_or_create(shop=instance.shop)
+        summary.update_rating_summary()
+    except Exception as e:
+        print(f"Error updating rating summary: {e}")
+
+
+@receiver(pre_delete, sender=ShopReview)
+def update_shop_rating_summary_on_review_delete(sender, instance, **kwargs):
+    """
+    Update shop rating summary when a review is deleted.
+    """
+    try:
+        summary = ShopRatingSummary.objects.get(shop=instance.shop)
+        summary.update_rating_summary()
+    except ShopRatingSummary.DoesNotExist:
+        pass
+    except Exception as e:
+        print(f"Error updating rating summary: {e}")
+
+
+@receiver(post_save, sender=ShopReviewResponse)
+def create_review_response_notification(sender, instance, created, **kwargs):
+    """
+    Create a notification when a shop owner responds to a review.
+    """
+    if created:
+        Notification.objects.create(
+            user=instance.review.customer,
+            message=f"🗨️ {instance.review.shop.name} has responded to your review",
+            type='review_response',
+            priority='medium',
+            shop=instance.review.shop
+        )

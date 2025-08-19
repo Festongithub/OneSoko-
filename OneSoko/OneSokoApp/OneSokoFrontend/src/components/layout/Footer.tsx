@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  MapPinIcon, 
-  PhoneIcon, 
+import {
+  PhoneIcon,
   EnvelopeIcon,
+  MapPinIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
+import { NewsletterSubscription } from '../newsletter';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -137,22 +138,7 @@ const Footer: React.FC = () => {
             </div>
 
             {/* Newsletter Signup */}
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-2">Stay Updated</h4>
-              <form className="flex space-x-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-3 py-2 bg-secondary-800 text-white placeholder-secondary-400 border border-secondary-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-                >
-                  Subscribe
-                </button>
-              </form>
-            </div>
+            <NewsletterSubscription variant="minimal" showTitle={true} />
           </div>
         </div>
       </div>

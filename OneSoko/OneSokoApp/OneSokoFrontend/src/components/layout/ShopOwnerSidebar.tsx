@@ -7,7 +7,8 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   CogIcon,
-  BuildingStorefrontIcon
+  BuildingStorefrontIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 import { useShopSession } from '../../hooks/useShopSession';
 import { useAuthStore } from '../../stores/authStore';
@@ -41,6 +42,12 @@ const ShopOwnerSidebar: React.FC = () => {
       href: '/shop/orders',
       icon: ClipboardDocumentListIcon,
       description: 'View and manage orders'
+    },
+    {
+      name: 'Reviews',
+      href: '/shop/reviews',
+      icon: StarIcon,
+      description: 'Manage customer reviews'
     },
     {
       name: 'Analytics',

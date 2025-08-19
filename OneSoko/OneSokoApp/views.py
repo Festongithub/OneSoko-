@@ -4,11 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
     Product, Shop, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, Wishlist, Message, Notification,
-    ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote
+    ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote, EmailSubscription
 )
 from .serializers import (
     ProductSerializer, ShopSerializer, CategorySerializer, TagSerializer, ReviewSerializer, ProductVariantSerializer, UserProfileSerializer, OrderSerializer, OrderItemSerializer, PaymentSerializer, WishlistSerializer, MessageSerializer, NotificationSerializer,
-    ShopReviewSerializer, ShopReviewCreateSerializer, ShopReviewResponseSerializer, ShopRatingSummarySerializer, ReviewHelpfulVoteSerializer, ShopWithReviewsSerializer
+    ShopReviewSerializer, ShopReviewCreateSerializer, ShopReviewResponseSerializer, ShopRatingSummarySerializer, ReviewHelpfulVoteSerializer, ShopWithReviewsSerializer, EmailSubscriptionSerializer
 )
 from django.contrib.auth.models import User
 from .serializers import UserRegistrationSerializer, ShopownerRegistrationSerializer
@@ -708,7 +708,7 @@ class ShopWithReviewsViewSet(viewsets.ReadOnlyModelViewSet):
         # Get or create rating summary
         summary, created = ShopRatingSummary.objects.get_or_create(shop=shop)
         if created or not summary.last_updated:
-            summary.update_summary()
+            summary.update_rating_summary()
         
         return Response({
             'shop_id': shop.id,
@@ -716,11 +716,148 @@ class ShopWithReviewsViewSet(viewsets.ReadOnlyModelViewSet):
             'total_reviews': summary.total_reviews,
             'average_rating': summary.average_rating,
             'rating_distribution': {
-                '5_stars': summary.five_star_percentage,
-                '4_stars': summary.four_star_percentage,
-                '3_stars': summary.three_star_percentage,
-                '2_stars': summary.two_star_percentage,
-                '1_star': summary.one_star_percentage,
+                '5_stars': summary.rating_percentages[5],
+                '4_stars': summary.rating_percentages[4],
+                '3_stars': summary.rating_percentages[3],
+                '2_stars': summary.rating_percentages[2],
+                '1_star': summary.rating_percentages[1],
             },
             'last_updated': summary.last_updated
         })
+
+
+# Email Subscription Views
+from rest_framework.views import APIView
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.http import urlencode
+
+
+class EmailSubscriptionCreateView(APIView):
+    """Create a new email subscription"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = EmailSubscriptionSerializer(data=request.data)
+        if serializer.is_valid():
+            # Set default subscription types if none provided
+            if not serializer.validated_data.get('subscription_types'):
+                serializer.validated_data['subscription_types'] = ['newsletter']
+            
+            # Link to user if authenticated
+            if request.user.is_authenticated:
+                serializer.validated_data['user'] = request.user
+            
+            subscription = serializer.save()
+            
+            # Generate confirmation token
+            confirmation_token = subscription.generate_confirmation_token()
+            subscription.save()
+            
+            # Send confirmation email
+            self.send_confirmation_email(subscription, confirmation_token, request)
+            
+            return Response({
+                'message': 'Subscription created successfully! Please check your email to confirm.',
+                'subscription_id': subscription.subscriptionId,
+                'email': subscription.email
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def send_confirmation_email(self, subscription, token, request):
+        """Send confirmation email to subscriber"""
+        try:
+            # Build confirmation URL
+            confirmation_url = request.build_absolute_uri(
+                reverse('email-subscription-confirm') + f'?token={token}'
+            )
+            
+            # Email context
+            context = {
+                'subscription': subscription,
+                'confirmation_url': confirmation_url,
+                'site_name': 'OneSoko',
+            }
+            
+            # Send email
+            send_mail(
+                subject='Confirm your OneSoko newsletter subscription',
+                message=f'Please confirm your subscription by clicking: {confirmation_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[subscription.email],
+                html_message=render_to_string('emails/subscription_confirmation.html', context) if hasattr(settings, 'TEMPLATES') else None,
+                fail_silently=False,
+            )
+        except Exception as e:
+            # Log the error but don't fail the subscription
+            print(f"Failed to send confirmation email: {e}")
+
+
+class EmailSubscriptionConfirmView(APIView):
+    """Confirm email subscription"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        token = request.GET.get('token')
+        if not token:
+            return Response({'error': 'Confirmation token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            subscription = EmailSubscription.objects.get(
+                confirmation_token=token, 
+                is_active=True
+            )
+            subscription.confirm_subscription()
+            
+            return Response({
+                'message': 'Email subscription confirmed successfully!',
+                'email': subscription.email
+            }, status=status.HTTP_200_OK)
+        
+        except EmailSubscription.DoesNotExist:
+            return Response({'error': 'Invalid or expired confirmation token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmailSubscriptionUnsubscribeView(APIView):
+    """Unsubscribe from email notifications"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        token = request.data.get('token')  # Optional unsubscribe token for security
+        
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            subscription = EmailSubscription.objects.get(email=email, is_active=True)
+            subscription.unsubscribe()
+            
+            return Response({
+                'message': 'Successfully unsubscribed from email notifications',
+                'email': email
+            }, status=status.HTTP_200_OK)
+        
+        except EmailSubscription.DoesNotExist:
+            return Response({'error': 'Email subscription not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EmailSubscriptionStatusView(APIView):
+    """Check subscription status"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        email = request.GET.get('email')
+        if not email:
+            return Response({'error': 'Email parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            subscription = EmailSubscription.objects.get(email=email)
+            serializer = EmailSubscriptionSerializer(subscription)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except EmailSubscription.DoesNotExist:
+            return Response({'subscribed': False, 'email': email}, status=status.HTTP_200_OK)
