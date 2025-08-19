@@ -80,6 +80,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     display_name = serializers.ReadOnlyField()
     profile_completion_percentage = serializers.ReadOnlyField()
     verification_badge = serializers.SerializerMethodField()
+    date_joined = serializers.SerializerMethodField()  # Get from user model
     
     class Meta:
         model = UserProfile
@@ -87,11 +88,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'bio', 'avatar', 'avatar_url', 'cover_photo', 'cover_photo_url',
             'address', 'phone_number', 'website', 'date_of_birth', 'location',
             'is_shopowner', 'is_public', 'is_email_verified', 'date_joined',
-            'last_active', 'twitter_url', 'facebook_url', 'instagram_url', 'linkedin_url',
+            'twitter_url', 'facebook_url', 'instagram_url', 'linkedin_url',
             'followers_count', 'following_count', 'is_verified', 'verification_type',
             'full_name', 'display_name', 'profile_completion_percentage', 'verification_badge'
         ]
-        read_only_fields = ['date_joined', 'last_active', 'followers_count', 'following_count']
+        read_only_fields = ['followers_count', 'following_count']
 
     def get_avatar_url(self, obj):
         if obj.avatar:
@@ -111,6 +112,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_verification_badge(self, obj):
         return obj.get_verification_badge()
+
+    def get_date_joined(self, obj):
+        """Get the date_joined from the related user model"""
+        return obj.user.date_joined if obj.user else None
 
 # Enhanced User serializer for profile contexts
 class UserDetailSerializer(serializers.ModelSerializer):

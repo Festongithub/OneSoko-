@@ -1,4 +1,3 @@
-import type { AxiosResponse } from 'axios';
 import api from './api';
 
 export interface WishlistResponse {
