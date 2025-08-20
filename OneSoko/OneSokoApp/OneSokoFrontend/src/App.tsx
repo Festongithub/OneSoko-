@@ -11,6 +11,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 
 // Layout Components
 import Header from './components/layout/Header';
+import LeftNavbar from './components/layout/LeftNavbar';
 import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 
@@ -57,6 +58,7 @@ import NotificationsPage from './pages/customer/NotificationsPage';
 import ProfilePage from './pages/customer/ProfilePage';
 import FeedPage from './pages/customer/FeedPage';
 import DiscoverPage from './pages/customer/DiscoverPage';
+import QuickLinksPage from './pages/QuickLinksPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -74,6 +76,7 @@ const queryClient = new QueryClient({
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Check authentication status on app startup
@@ -107,32 +110,40 @@ function App() {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex flex-col transition-colors duration-200">
-            <Header />
-            
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  style: {
-                    background: '#10B981',
-                  },
-                },
-                error: {
-                  style: {
-                    background: '#EF4444',
-                  },
-                },
-              }}
+          <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 transition-colors duration-200">
+            {/* Left Navigation Bar */}
+            <LeftNavbar 
+              isOpen={isMobileMenuOpen} 
+              onClose={() => setIsMobileMenuOpen(false)} 
             />
             
-            <main className="flex-grow">
-              <Routes>
+            {/* Main Content Area */}
+            <div className="md:ml-64 flex flex-col min-h-screen">
+              <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+              
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
+                  },
+                  success: {
+                    style: {
+                      background: '#10B981',
+                    },
+                  },
+                  error: {
+                    style: {
+                      background: '#EF4444',
+                    },
+                  },
+                }}
+              />
+              
+              <main className="flex-grow">
+                <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/search" element={<ExplorePage />} />
@@ -273,6 +284,7 @@ function App() {
                   } 
                 />
                 <Route path="/discover" element={<DiscoverPage />} />
+                <Route path="/quick-links" element={<QuickLinksPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/profile/:username" element={<ProfilePage />} />
                 
@@ -288,6 +300,7 @@ function App() {
           
           {/* Cart Sidebar */}
           <CartSidebar />
+        </div>
         </Router>
       </QueryClientProvider>
     </ThemeProvider>

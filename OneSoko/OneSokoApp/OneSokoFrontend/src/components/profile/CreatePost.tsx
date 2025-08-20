@@ -64,7 +64,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
     try {
       const formData = new FormData();
       formData.append('content', content.trim());
-      formData.append('post_type', 'text');
+      formData.append('post_type', 'post');
       
       if (imageFile) {
         formData.append('image', imageFile);

@@ -77,9 +77,9 @@ const NewsletterSubscription: React.FC<NewsletterSubscriptionProps> = ({
       case 'minimal':
         return {
           container: 'space-y-2',
-          form: 'flex space-x-2',
-          input: 'flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm',
-          button: 'px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm font-medium'
+          form: 'flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2',
+          input: 'flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm',
+          button: 'flex-shrink-0 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm font-medium text-center'
         };
       case 'banner':
         return {

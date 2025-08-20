@@ -13,7 +13,7 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 import AddToCartButton from '../../components/cart/AddToCartButton';
 import { productApi, categoryApi } from '../../services/productApi';
-import type { Product, Category } from '../../types';
+import type { Product } from '../../types';
 import { useQuery } from '@tanstack/react-query';
 
 // Sort options
@@ -247,7 +247,7 @@ const ProductsPage: React.FC = () => {
   });
 
   // Fetch categories from API
-  const { data: categoriesData = [], isLoading: categoriesLoading } = useQuery({
+  const { data: categoriesData = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: categoryApi.getAll
   });

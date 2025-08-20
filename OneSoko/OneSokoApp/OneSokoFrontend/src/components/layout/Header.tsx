@@ -16,6 +16,7 @@ import AboutIcon from '../icons/AboutIcon';
 
 interface HeaderProps {
   variant?: 'customer' | 'shop-owner';
+  onMenuToggle?: () => void;
 }
 
 interface NavItem {
@@ -24,7 +25,7 @@ interface NavItem {
   icon?: React.ComponentType<{ className?: string }> | null;
 }
 
-const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
+const Header: React.FC<HeaderProps> = ({ variant = 'customer', onMenuToggle }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,12 +65,6 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
   };
 
   const customerNavItems: NavItem[] = [
-    { name: 'Home', href: '/', icon: null },
-    { name: 'Feed', href: '/feed', icon: null },
-    { name: 'Discover', href: '/discover', icon: null },
-    { name: 'Explore', href: '/explore', icon: null },
-    { name: 'Categories', href: '/categories', icon: null },
-    { name: 'Shops', href: '/shops', icon: null },
     { name: 'Reviews Demo', href: '/reviews-demo', icon: null },
     { name: 'About', href: '/about', icon: AboutIcon },
   ];
@@ -87,17 +82,17 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
     <header className="bg-white dark:bg-secondary-800 shadow-sm border-b border-secondary-200 dark:border-secondary-700 sticky top-0 z-50 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-secondary-900 dark:text-white">OneSoko</span>
-          </Link>
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden p-2 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-700 text-secondary-600 dark:text-secondary-400"
+          >
+            <Bars3Icon className="w-6 h-6" />
+          </button>
 
           {/* Shop Information - Shop Owner Only */}
           {variant === 'shop-owner' && isShopOwner && userShop && (
-            <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <div className="flex items-center space-x-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
               <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xs">S</span>
               </div>
@@ -108,26 +103,9 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
             </div>
           )}
 
-          {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-12">
-            {navItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="nav-link flex items-center space-x-2"
-                >
-                  {IconComponent && <IconComponent className="w-4 h-4" />}
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
           {/* Search Bar - Customer Only */}
           {variant === 'customer' && (
-            <div className="hidden md:flex flex-1 max-w-lg mx-8">
+            <div className="flex flex-1 max-w-lg mx-8">
               <form onSubmit={handleSearch} className="w-full">
                 <div className="relative">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
@@ -142,6 +120,23 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer' }) => {
               </form>
             </div>
           )}
+
+          {/* Navigation - Desktop */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="nav-link flex items-center space-x-2"
+                >
+                  {IconComponent && <IconComponent className="w-4 h-4" />}
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">

@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import AddToCartButton from '../../components/cart/AddToCartButton';
+import QuickLinksWidget from '../../components/layout/QuickLinksWidget';
 import type { Product } from '../../types';
 
 // Mock data - replace with real API calls later
@@ -353,6 +354,18 @@ const HomePage: React.FC = () => {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Quick Links Section */}
+      <section className="py-12 bg-secondary-50 dark:bg-secondary-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <QuickLinksWidget 
+            variant="horizontal" 
+            showTitle={true}
+            maxItems={6}
+            className="max-w-4xl mx-auto"
+          />
         </div>
       </section>
 
