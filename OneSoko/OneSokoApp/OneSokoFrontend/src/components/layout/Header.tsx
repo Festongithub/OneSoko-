@@ -266,7 +266,6 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer', onMenuToggle }) =
                 </Link>
               </div>
             )}
-
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -339,7 +338,6 @@ const Header: React.FC<HeaderProps> = ({ variant = 'customer', onMenuToggle }) =
                 </Link>
               </div>
             )}
-
             {isAuthenticated && (
               <div className="mt-4 pt-4 border-t border-secondary-200">
                 <button

@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">OS</span>
-              </div>
-              <span className="hidden sm:block text-xl font-bold text-white">
-                OS
-              </span>import {
+import { Link, useNavigate } from 'react-router-dom';
+import {
   MagnifyingGlassIcon,
   BellIcon,
   EnvelopeIcon,
@@ -110,11 +106,11 @@ const XHeader: React.FC<XHeaderProps> = ({
 
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <ShoppingBagIcon className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">OS</span>
               </div>
               <span className="hidden sm:block text-xl font-bold text-white">
-                OneSoko
+                OS
               </span>
             </Link>
           </div>
@@ -126,7 +122,7 @@ const XHeader: React.FC<XHeaderProps> = ({
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search OneSoko"
+                  placeholder="Search OS"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-black transition-all"
@@ -326,7 +322,6 @@ const XHeader: React.FC<XHeaderProps> = ({
             )}
           </div>
         </div>
-
         {/* Mobile Search */}
         <div className="md:hidden px-4 pb-3">
           <form onSubmit={handleSearch}>
@@ -334,7 +329,7 @@ const XHeader: React.FC<XHeaderProps> = ({
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search OneSoko"
+                placeholder="Search OS"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-black transition-all"
