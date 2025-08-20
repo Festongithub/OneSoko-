@@ -80,7 +80,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     display_name = serializers.ReadOnlyField()
     profile_completion_percentage = serializers.ReadOnlyField()
     verification_badge = serializers.SerializerMethodField()
-    date_joined = serializers.SerializerMethodField()  # Get from user model
+    date_joined = serializers.SerializerMethodField()
     
     class Meta:
         model = UserProfile
@@ -112,9 +112,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_verification_badge(self, obj):
         return obj.get_verification_badge()
-
+    
     def get_date_joined(self, obj):
-        """Get the date_joined from the related user model"""
+        """Get user's date_joined from related User model"""
         return obj.user.date_joined if obj.user else None
 
 # Enhanced User serializer for profile contexts

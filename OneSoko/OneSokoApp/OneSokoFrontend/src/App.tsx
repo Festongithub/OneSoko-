@@ -10,13 +10,20 @@ import { useAuthStore } from './stores/authStore';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // Layout Components
-import Header from './components/layout/Header';
-import LeftNavbar from './components/layout/LeftNavbar';
+import EnterpriseHeader from './components/layout/EnterpriseHeader';
+import EnterpriseLeftNavbar from './components/layout/EnterpriseLeftNavbar';
 import Footer from './components/layout/Footer';
 import CartSidebar from './components/cart/CartSidebar';
 
+// Enhanced UI Components
+import { ScrollToTop, MobileContactButtons, ToastProvider } from './components/ui/MobileEnhancements';
+
+// Demo Components
+import LayoutImprovementDemo from './components/demo/LayoutImprovementDemo';
+
 // Pages
 import HomePage from './pages/customer/HomePage';
+import XInspiredHomePage from './pages/customer/XInspiredHomePage';
 import ExplorePage from './pages/customer/ExplorePage';
 import ShopDetailPage from './pages/customer/ShopDetailPage';
 import CartPage from './pages/customer/CartPage';
@@ -109,42 +116,64 @@ function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 transition-colors duration-200">
-            {/* Left Navigation Bar */}
-            <LeftNavbar 
-              isOpen={isMobileMenuOpen} 
-              onClose={() => setIsMobileMenuOpen(false)} 
-            />
-            
-            {/* Main Content Area */}
-            <div className="md:ml-64 flex flex-col min-h-screen">
-              <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-              
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    style: {
-                      background: '#10B981',
-                    },
-                  },
-                  error: {
-                    style: {
-                      background: '#EF4444',
-                    },
-                  },
-                }}
-              />
-              
-              <main className="flex-grow">
-                <Routes>
+        <ToastProvider>
+          <Router>
+            <div className="layout-container bg-neutral-50 dark:bg-neutral-900 transition-colors duration-200">
+              {/* Enhanced Layout with Improved Side-by-Side Navigation */}
+              <div className="desktop-layout layout-transition">
+                {/* Left Navigation Bar - Enhanced Side-by-Side Layout */}
+                <div className={`
+                  desktop-sidebar mobile-sidebar sidebar-slide
+                  ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                  ${isMobileMenuOpen ? 'mobile-sidebar' : ''} 
+                  transition-transform duration-300 ease-in-out
+                  fixed md:relative inset-y-0 left-0 z-50 md:z-30
+                `}>
+                  <EnterpriseLeftNavbar 
+                    onClose={() => setIsMobileMenuOpen(false)} 
+                  />
+                </div>
+                
+                {/* Mobile Overlay with Enhanced Animation */}
+                {isMobileMenuOpen && (
+                  <div 
+                    className="mobile-overlay fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                )}
+                
+                {/* Main Content Area - Enhanced Side by Side Layout */}
+                <div className="desktop-content flex flex-col min-w-0 content-transition">
+                  {/* Header with Improved Mobile Integration */}
+                  <EnterpriseHeader onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+                
+                  {/* Toast Notifications */}
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
+                      duration: 4000,
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
+                      },
+                      success: {
+                        style: {
+                          background: '#10B981',
+                        },
+                      },
+                      error: {
+                        style: {
+                          background: '#EF4444',
+                        },
+                      },
+                    }}
+                  />
+                  
+                  {/* Main Content with Responsive Padding */}
+                  <main className="flex-1 overflow-auto main-content-area mobile-padding tablet-padding desktop-padding">
+                    <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/x-ui" element={<XInspiredHomePage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/search" element={<ExplorePage />} />
                 <Route path="/products" element={<ProductsPage />} />
@@ -291,20 +320,27 @@ function App() {
                 <Route path="/test" element={<TestComponent />} />
                 <Route path="/reviews-demo" element={<ReviewsTestPage />} />
                 <Route path="/newsletter-test" element={<TestNewsletterPage />} />
+                <Route path="/layout-demo" element={<LayoutImprovementDemo />} />
                 <Route path="*" element={<HomePage />} />
               </Routes>
             </main>
             
             <Footer />
           </div>
-          
-          {/* Cart Sidebar */}
-          <CartSidebar />
         </div>
-        </Router>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
+        
+        {/* Cart Sidebar */}
+        <CartSidebar />
+
+        {/* Mobile Enhancements */}
+        <ScrollToTop />
+        <MobileContactButtons />
+      </div>
+      </Router>
+      </ToastProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
 }
 
 export default App;

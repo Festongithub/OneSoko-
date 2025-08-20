@@ -584,7 +584,7 @@ class Notification(models.Model):
     # User to be notified (shopowner)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     # Notification message
-    message = models.TextField()
+    text = models.TextField()
     # Type of notification with predefined choices
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='system')
     # Priority level of the notification
