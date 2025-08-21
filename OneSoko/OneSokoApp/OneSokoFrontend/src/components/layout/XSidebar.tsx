@@ -223,10 +223,10 @@ const XSidebar: React.FC<XSidebarProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 lg:p-6">
           <Link to="/" className="flex items-center space-x-3" onClick={onClose}>
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">OS</span>
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <ShoppingBagIcon className="h-5 w-5 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white hidden lg:block">OS</span>
+            <span className="text-2xl font-bold text-white hidden lg:block">OneSoko</span>
           </Link>
           
           <button
@@ -268,7 +268,7 @@ const XSidebar: React.FC<XSidebarProps> = ({
               />
               <div className="flex-1 min-w-0 hidden lg:block">
                 <p className="font-medium text-white truncate">
-                  {user?.first_name || user?.username || 'User Name'}
+                  {user?.profile?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'User Name'}
                 </p>
                 <p className="text-gray-500 text-sm truncate">
                   @{user?.username || 'username'}

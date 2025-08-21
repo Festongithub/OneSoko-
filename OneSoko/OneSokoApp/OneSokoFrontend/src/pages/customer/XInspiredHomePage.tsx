@@ -331,10 +331,10 @@ const XInspiredHomePage: React.FC = () => {
         {/* Logo */}
         <div className="mb-8">
           <Link to="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">OS</span>
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <ShoppingBagIcon className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white">OS</span>
+            <span className="text-2xl font-bold text-white">OneSoko</span>
           </Link>
         </div>
 
@@ -453,7 +453,7 @@ const XInspiredHomePage: React.FC = () => {
           <MagnifyingGlassIcon className="x-search-icon" />
           <input
             type="text"
-            placeholder="Search OS"
+            placeholder="Search OneSoko"
             className="x-search-input"
           />
         </div>

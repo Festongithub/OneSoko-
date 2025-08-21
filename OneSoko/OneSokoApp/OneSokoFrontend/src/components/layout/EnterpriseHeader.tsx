@@ -274,6 +274,7 @@ const EnterpriseHeader: React.FC<EnterpriseHeaderProps> = ({ onMobileMenuToggle 
             )}
           </div>
         </div>
+
         {/* Mobile Search */}
         <div className="md:hidden pb-3">
           <form onSubmit={handleSearch}>

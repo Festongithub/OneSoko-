@@ -371,7 +371,7 @@ const HomePage: React.FC = () => {
                 to="/register/shop-owner" 
                 className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 hover:border-white/50 hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm"
               >
-                Become a Seller
+                Become a Partner
               </Link>
             </div>
 

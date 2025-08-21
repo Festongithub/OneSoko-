@@ -12,7 +12,7 @@ def create_shop_notification(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(
             user=instance.shopowner,
-            text=f"🎉 Congratulations! Your shop '{instance.name}' has been successfully created and is now live.",
+            message=f"🎉 Congratulations! Your shop '{instance.name}' has been successfully created and is now live.",
             type='shop_created',
             priority='high',
             shop=instance
@@ -28,7 +28,7 @@ def create_order_notification(sender, instance, created, **kwargs):
         # Create notification for the shop owner
         Notification.objects.create(
             user=instance.shop.shopowner,
-            text=f"📦 New order #{instance.id} received from {instance.user.get_full_name() or instance.user.username} for ${instance.total}",
+            message=f"📦 New order #{instance.id} received from {instance.user.get_full_name() or instance.user.username} for ${instance.total}",
             type='new_order',
             priority='high',
             shop=instance.shop,
@@ -59,7 +59,7 @@ def create_order_status_notification(sender, instance, created, **kwargs):
         if instance.status in status_messages:
             Notification.objects.create(
                 user=instance.shop.shopowner,
-                text=status_messages[instance.status],
+                message=status_messages[instance.status],
                 type='order_status_update',
                 priority=priority_map.get(instance.status, 'medium'),
                 shop=instance.shop,
@@ -83,7 +83,7 @@ def create_review_notification(sender, instance, created, **kwargs):
             rating_emoji = "⭐" * instance.rating
             Notification.objects.create(
                 user=shop.shopowner,
-                text=f"📝 New {instance.rating}-star review for '{instance.product.name}' from {instance.user.get_full_name() or instance.user.username}: {rating_emoji}",
+                message=f"📝 New {instance.rating}-star review for '{instance.product.name}' from {instance.user.get_full_name() or instance.user.username}: {rating_emoji}",
                 type='new_review',
                 priority=priority,
                 shop=shop,
@@ -115,7 +115,7 @@ def create_low_stock_notification(sender, instance, created, **kwargs):
                 if not existing_notification:
                     Notification.objects.create(
                         user=shop.shopowner,
-                        text=f"⚠️ Low stock alert: '{product.name}' has only {product.quantity} items left",
+                        message=f"⚠️ Low stock alert: '{product.name}' has only {product.quantity} items left",
                         type='low_stock',
                         priority='high',
                         shop=shop,
@@ -138,7 +138,7 @@ def create_low_stock_notification(sender, instance, created, **kwargs):
                 if not existing_notification:
                     Notification.objects.create(
                         user=shop.shopowner,
-                        text=f"🚫 Out of stock: '{product.name}' is now out of stock",
+                        message=f"🚫 Out of stock: '{product.name}' is now out of stock",
                         type='out_of_stock',
                         priority='urgent',
                         shop=shop,
@@ -175,7 +175,7 @@ def create_milestone_notifications(sender, instance, created, **kwargs):
             
             Notification.objects.create(
                 user=shop.shopowner,
-                text=milestone_messages[total_orders],
+                message=milestone_messages[total_orders],
                 type='milestone',
                 priority='medium',
                 shop=shop
@@ -216,7 +216,7 @@ def create_review_response_notification(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(
             user=instance.review.customer,
-            text=f"🗨️ {instance.review.shop.name} has responded to your review",
+            message=f"🗨️ {instance.review.shop.name} has responded to your review",
             type='review_response',
             priority='medium',
             shop=instance.review.shop

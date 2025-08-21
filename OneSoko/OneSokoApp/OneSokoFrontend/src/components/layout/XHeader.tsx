@@ -106,11 +106,11 @@ const XHeader: React.FC<XHeaderProps> = ({
 
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">OS</span>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <ShoppingBagIcon className="h-5 w-5 text-white" />
               </div>
               <span className="hidden sm:block text-xl font-bold text-white">
-                OS
+                OneSoko
               </span>
             </Link>
           </div>
@@ -122,7 +122,7 @@ const XHeader: React.FC<XHeaderProps> = ({
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search OS"
+                  placeholder="Search OneSoko"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-black transition-all"
@@ -255,7 +255,7 @@ const XHeader: React.FC<XHeaderProps> = ({
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-black border border-gray-700 rounded-lg shadow-xl overflow-hidden">
                       <div className="p-4 border-b border-gray-700">
-                        <p className="font-medium text-white">{user?.first_name || user?.username || 'User'}</p>
+                        <p className="font-medium text-white">{user?.profile?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'User'}</p>
                         <p className="text-gray-400 text-sm">@{user?.username || 'username'}</p>
                       </div>
                       
@@ -322,6 +322,7 @@ const XHeader: React.FC<XHeaderProps> = ({
             )}
           </div>
         </div>
+
         {/* Mobile Search */}
         <div className="md:hidden px-4 pb-3">
           <form onSubmit={handleSearch}>
@@ -329,7 +330,7 @@ const XHeader: React.FC<XHeaderProps> = ({
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search OS"
+                placeholder="Search OneSoko"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-black transition-all"

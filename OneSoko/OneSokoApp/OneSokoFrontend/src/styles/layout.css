@@ -67,6 +67,7 @@
   .desktop-sidebar {
     flex-shrink: 0;
     width: 16rem; /* 64 * 0.25rem = 16rem */
+    height: 100vh; /* Ensure full height */
   }
   
   .desktop-content {
@@ -135,8 +136,40 @@
 /* Layout container for better organization */
 .layout-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: inherit;
+}
+
+/* Main content wrapper */
+.layout-container > div:first-child {
+  flex: 1;
+  display: flex;
+}
+
+/* Footer positioned outside sidebar constraint */
+footer {
+  width: 100%;
+  margin-left: 0 !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure sidebar extends to full height without gaps */
+.desktop-sidebar {
+  position: relative;
+}
+
+.desktop-sidebar > div {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Remove any potential gaps or margins */
+.sidebar-container {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 /* Responsive padding adjustments */

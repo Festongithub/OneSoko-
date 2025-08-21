@@ -180,7 +180,7 @@ const EnterpriseLeftNavbar: React.FC<EnterpriseLeftNavbarProps> = ({ onClose }) 
   return (
     <>
       {/* Sidebar */}
-      <div className="h-full w-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800">
+      <div className="h-screen w-full bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-4 py-6 border-b border-neutral-200 dark:border-neutral-800">
@@ -209,7 +209,7 @@ const EnterpriseLeftNavbar: React.FC<EnterpriseLeftNavbarProps> = ({ onClose }) 
 
           {/* Navigation Content */}
           <div className="flex-1 overflow-y-auto px-4 py-6 sidebar-scrollbar">
-            <nav className="space-y-8">
+            <nav className="space-y-8 pb-4">
               {/* Main Navigation */}
               <div>
                 <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4">
@@ -276,7 +276,7 @@ const EnterpriseLeftNavbar: React.FC<EnterpriseLeftNavbarProps> = ({ onClose }) 
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-4 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="px-4 py-4 border-t border-neutral-200 dark:border-neutral-800 mt-auto">
             {isAuthenticated ? (
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">

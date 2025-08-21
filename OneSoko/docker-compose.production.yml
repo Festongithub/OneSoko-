@@ -1,0 +1,139 @@
+# Docker Compose for scalable deployment
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Main Django application
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./media:/app/media
+    restart: always
+    deploy:
+      replicas: 3  # Run 3 instances for load balancing
+
+  # Load balancer (Nginx)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ./static:/var/www/static
+    depends_on:
+      - web
+    restart: always
+
+  # Database
+  db:
+    image: mysql:8.0
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+    ports:
+      - "3306:3306"
+    restart: always
+
+  # Redis for caching and Celery
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # Celery worker
+  celery:
+    build: .
+    command: celery -A MyOneSoko worker --loglevel=info --concurrency=4
+    environment:
+      - DJANGO_SETTINGS_MODULE=MyOneSoko.settings_production
+      - DATABASE_URL=mysql://user:password@db:3306/onesoko
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: always
+    deploy:
+      replicas: 2  # Run 2 celery workers
+
+  # Celery beat (scheduler)
+  celery-beat:
+    build: .
+    command: celery -A MyOneSoko beat --loglevel=info
+    environment:
+      - DJANGO_SETTINGS_MODULE=MyOneSoko.settings_production
+      - DATABASE_URL=mysql://user:password@db:3306/onesoko
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: always
+
+  # Monitoring (Prometheus)
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: always
+
+  # Grafana for monitoring dashboard
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: always
+
+  # ElasticSearch for logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: always
+
+volumes:
+  mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:

@@ -32,12 +32,11 @@ class ShopFilter(django_filters.FilterSet):
     location = django_filters.CharFilter(field_name='location', lookup_expr='icontains')
     city = django_filters.CharFilter(field_name='city', lookup_expr='icontains')
     country = django_filters.CharFilter(field_name='country', lookup_expr='icontains')
-    is_verified = django_filters.BooleanFilter()
     search = django_filters.CharFilter(method='filter_search')
 
     class Meta:
         model = Shop
-        fields = ['name', 'description', 'location', 'city', 'country', 'is_verified', 'search']
+        fields = ['name', 'description', 'location', 'city', 'country', 'search']
 
     def filter_search(self, queryset, name, value):
         """
@@ -53,10 +52,26 @@ class ShopFilter(django_filters.FilterSet):
             Q(shopowner__last_name__icontains=value)
         )
 
+# Product Filter for advanced filtering
 # Product ViewSet
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'price']
+    ordering = ['name']
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        Allow read-only access for unauthenticated users, require authentication for modifications.
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 # Shop ViewSet with enhanced search and filtering
 class ShopViewSet(viewsets.ModelViewSet):
@@ -183,7 +198,9 @@ class ShopViewSet(viewsets.ModelViewSet):
         
         # Filter verified shops only
         if verified_only:
-            queryset = queryset.filter(is_verified=True)
+            # Note: Shop model doesn't have is_verified field currently
+            # queryset = queryset.filter(is_verified=True)
+            pass
         
         # Apply sorting
         if sort_by == 'name':
@@ -258,16 +275,16 @@ class ShopViewSet(viewsets.ModelViewSet):
         """
         Get popular shops based on views and products count
         """
-        queryset = self.get_queryset().filter(is_verified=True).order_by('-views', '-products_count')[:10]
+        queryset = self.get_queryset().order_by('-views', '-products_count')[:10]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """
-        Get featured shops (verified shops with most products)
+        Get featured shops (shops with most products)
         """
-        queryset = self.get_queryset().filter(is_verified=True).order_by('-products_count', '-views')[:6]
+        queryset = self.get_queryset().order_by('-products_count', '-views')[:6]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

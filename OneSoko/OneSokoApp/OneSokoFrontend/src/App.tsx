@@ -119,11 +119,11 @@ function App() {
         <ToastProvider>
           <Router>
             <div className="layout-container bg-neutral-50 dark:bg-neutral-900 transition-colors duration-200">
-              {/* Enhanced Layout with Improved Side-by-Side Navigation */}
-              <div className="desktop-layout layout-transition">
+              {/* Main Layout Wrapper */}
+              <div className="desktop-layout layout-transition flex-1">
                 {/* Left Navigation Bar - Enhanced Side-by-Side Layout */}
                 <div className={`
-                  desktop-sidebar mobile-sidebar sidebar-slide
+                  desktop-sidebar mobile-sidebar sidebar-slide sidebar-container
                   ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                   ${isMobileMenuOpen ? 'mobile-sidebar' : ''} 
                   transition-transform duration-300 ease-in-out
@@ -324,10 +324,11 @@ function App() {
                 <Route path="*" element={<HomePage />} />
               </Routes>
             </main>
-            
-            <Footer />
           </div>
         </div>
+        
+        {/* Footer - Extended full width outside sidebar constraint */}
+        <Footer />
         
         {/* Cart Sidebar */}
         <CartSidebar />

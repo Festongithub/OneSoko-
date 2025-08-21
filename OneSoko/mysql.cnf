@@ -1,0 +1,21 @@
+[mysqld]
+# Performance optimizations for OneSoko
+innodb_buffer_pool_size = 1G
+innodb_log_file_size = 256M
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+query_cache_type = 1
+query_cache_size = 128M
+max_connections = 500
+thread_cache_size = 16
+table_open_cache = 2048
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+# Character set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# Security
+skip-name-resolve
+sql_mode = STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
