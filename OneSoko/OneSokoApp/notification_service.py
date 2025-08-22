@@ -178,7 +178,7 @@ class NotificationService:
                 'to': preferences.push_token,
                 'notification': {
                     'title': notification.title,
-                    'body': notification.message,
+                    'body': notification.text,
                 },
                 'data': {
                     'notification_id': str(notification.id),

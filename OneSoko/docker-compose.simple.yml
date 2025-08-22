@@ -1,0 +1,65 @@
+# Simplified Docker Compose for OneSoko
+# This is a development-friendly version
+
+services:
+  # Main Django application
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=MyOneSoko.settings
+      - DB_HOST=db
+      - DB_NAME=OneSokodb
+      - DB_USER=flamers
+      - DB_PASSWORD=Feston@01
+      - DB_PORT=3306
+    volumes:
+      - ./logs:/app/logs
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./static_frontend:/app/static_frontend  # Frontend build files
+    restart: always
+    depends_on:
+      - db
+      - redis
+
+  # Database (MySQL)
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: OneSokodb
+      MYSQL_USER: flamers
+      MYSQL_PASSWORD: Feston@01
+      MYSQL_ROOT_PASSWORD: rootpassword123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    restart: always
+
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  # Nginx (optional for production)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-simple.conf:/etc/nginx/nginx.conf
+      - ./staticfiles:/var/www/static
+    depends_on:
+      - web
+    restart: always
+
+volumes:
+  mysql_data:
+  redis_data:

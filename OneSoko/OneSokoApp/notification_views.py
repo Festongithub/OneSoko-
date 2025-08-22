@@ -55,7 +55,7 @@ class RealTimeNotificationViewSet(viewsets.ViewSet):
             notifications_data.append({
                 'id': str(notification.id),
                 'title': notification.title,
-                'message': notification.message,
+                'message': notification.text,
                 'notification_type': notification.notification_type,
                 'priority': notification.priority,
                 'is_read': notification.is_read,

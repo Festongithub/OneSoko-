@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Owner Registration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-container {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #005a8b;
+        }
+        pre {
+            background: #eee;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Shop Owner Registration Debug Tool</h1>
+    
+    <div class="test-container">
+        <h2>Test Shop Owner Registration</h2>
+        <p>This tool will help debug the "Registration failed" error by testing the exact API calls.</p>
+        
+        <button onclick="testShopOwnerRegistration()">🚀 Test Shop Owner Registration</button>
+        <button onclick="testBasicConnection()">🔗 Test Basic Connection</button>
+        <button onclick="clearResults()">🧹 Clear Results</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testBasicConnection() {
+            log('🔧 Testing basic backend connection...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Backend connection successful', 'success');
+                    log(`Available endpoints: ${Object.keys(data).join(', ')}`);
+                } else {
+                    log(`❌ Backend connection failed: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Backend connection error: ${error.message}`, 'error');
+                log('This might be a CORS issue or the backend is not running', 'warning');
+            }
+        }
+
+        async function testShopOwnerRegistration() {
+            log('🧪 Starting shop owner registration test...');
+            
+            // Generate unique test data
+            const timestamp = Date.now();
+            const testData = {
+                username: `testshop_${timestamp}`,
+                email: `testshop_${timestamp}@example.com`,
+                password: 'testpass123',
+                first_name: 'Test',
+                last_name: 'Shop',
+                phone_number: '+1234567890',
+                shop_name: `Test Shop ${timestamp}`,
+                shop_description: 'A test shop for debugging',
+                shop_address: '123 Test Street',
+                shop_phone: '+1234567890',
+                business_license: 'BL123456',
+                tax_id: 'TX123456'
+            };
+
+            log('📝 Test data generated:');
+            log(`<pre>${JSON.stringify(testData, null, 2)}</pre>`);
+
+            try {
+                log('📤 Sending registration request...');
+                
+                const response = await fetch(`${API_BASE_URL}/shopowners/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                });
+
+                log(`📋 Response status: ${response.status} ${response.statusText}`);
+                
+                // Get response headers
+                const headers = {};
+                for (let [key, value] of response.headers.entries()) {
+                    headers[key] = value;
+                }
+                log(`📋 Response headers: <pre>${JSON.stringify(headers, null, 2)}</pre>`);
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    log('✅ Registration successful!', 'success');
+                    log(`📋 Response data: <pre>${JSON.stringify(responseData, null, 2)}</pre>`);
+                    
+                    // Test login
+                    await testLogin(testData.username, testData.password);
+                    
+                } else {
+                    const errorText = await response.text();
+                    log('❌ Registration failed!', 'error');
+                    log(`📋 Error response: <pre>${errorText}</pre>`);
+                    
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        log(`📋 Parsed error: <pre>${JSON.stringify(errorJson, null, 2)}</pre>`);
+                    } catch (e) {
+                        log('Error response is not JSON', 'warning');
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, 'error');
+                log(`📋 Full error: <pre>${error.stack}</pre>`);
+                
+                if (error.message.includes('CORS')) {
+                    log('🚨 This is likely a CORS issue. The Django backend needs CORS configuration.', 'warning');
+                } else if (error.message.includes('fetch')) {
+                    log('🚨 This might be a network connectivity issue.', 'warning');
+                }
+            }
+        }
+
+        async function testLogin(username, password) {
+            log('🔐 Testing login with created user...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/token/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (response.ok) {
+                    const tokenData = await response.json();
+                    log('✅ Login successful!', 'success');
+                    log('🎫 JWT token received');
+                    
+                    // Test authenticated request
+                    await testAuthenticatedRequest(tokenData.access);
+                } else {
+                    const errorData = await response.text();
+                    log('❌ Login failed!', 'error');
+                    log(`📋 Login error: <pre>${errorData}</pre>`);
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthenticatedRequest(token) {
+            log('🔒 Testing authenticated request...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/userprofiles/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Authenticated request successful!', 'success');
+                    log(`📋 Profile data: <pre>${JSON.stringify(data, null, 2)}</pre>`);
+                } else {
+                    log(`⚠️ Authenticated request failed: ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                log(`❌ Authenticated request error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run basic connection test when page loads
+        window.onload = () => {
+            log('🚀 Debug tool loaded. Click buttons above to run tests.');
+            testBasicConnection();
+        };
+    </script>
+</body>
+</html>

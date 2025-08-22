@@ -584,7 +584,7 @@ class Notification(models.Model):
     # User to be notified (shopowner)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     # Notification message
-    message = models.TextField()
+    text = models.TextField()
     # Type of notification with predefined choices
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='system')
     # Priority level of the notification
@@ -597,6 +597,11 @@ class Notification(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
+    # Additional references that exist in the database
+    message_id = models.BigIntegerField(null=True, blank=True)
+    inquiry_id = models.BigIntegerField(null=True, blank=True)
+    # Additional data for the notification
+    data = models.JSONField(default=dict)
     
     class Meta:
         ordering = ['-timestamp']  # Most recent first
@@ -607,7 +612,7 @@ class Notification(models.Model):
         ]
 
     def __str__(self):
-        return f"Notification for {self.user.username}: {self.message[:30]}..."
+        return f"Notification for {self.user.username}: {self.text[:30]}..."
     
     @property
     def priority_icon(self):

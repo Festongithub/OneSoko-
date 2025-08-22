@@ -41,7 +41,7 @@ def test_enhanced_order_management_api():
     
     # Test dashboard summary endpoint
     print("\n📊 Testing dashboard summary endpoint...")
-    request = factory.get('/api/enhanced-orders/dashboard_summary/')
+    request = factory.get('/onesoko/enhanced-orders/dashboard_summary/')
     request.user = user
     
     viewset = EnhancedOrderViewSet()
@@ -62,7 +62,7 @@ def test_enhanced_order_management_api():
     
     # Test analytics endpoint
     print("\n📈 Testing analytics endpoint...")
-    request = factory.get('/api/enhanced-orders/analytics/')
+    request = factory.get('/onesoko/enhanced-orders/analytics/')
     request.user = user
     
     viewset = EnhancedOrderViewSet()
@@ -81,7 +81,7 @@ def test_enhanced_order_management_api():
     
     # Test order list endpoint
     print("\n📋 Testing order list endpoint...")
-    request = factory.get('/api/enhanced-orders/')
+    request = factory.get('/onesoko/enhanced-orders/')
     request.user = user
     
     viewset = EnhancedOrderViewSet()
@@ -106,7 +106,7 @@ def test_enhanced_order_management_api():
             print(f"\n🔍 Test {i+1}: Testing order #{order.id}...")
             
             # Test order detail endpoint
-            request = factory.get(f'/api/enhanced-orders/{order.id}/')
+            request = factory.get(f'/onesoko/enhanced-orders/{order.id}/')
             request.user = user
             
             try:
@@ -120,7 +120,7 @@ def test_enhanced_order_management_api():
             
             # Test order tracking endpoint
             print(f"\n🚚 Testing tracking for order #{order.id}...")
-            request = factory.get(f'/api/enhanced-orders/{order.id}/tracking/')
+            request = factory.get(f'/onesoko/enhanced-orders/{order.id}/tracking/')
             request.user = user
             
             viewset.action = 'tracking'
@@ -140,7 +140,7 @@ def test_enhanced_order_management_api():
             print(f"\n🔄 Testing status update for order #{order.id}...")
             new_status = 'shipped' if order.status == 'paid' else 'paid'
             request = factory.post(
-                f'/api/enhanced-orders/{order.id}/update_status/', 
+                f'/onesoko/enhanced-orders/{order.id}/update_status/', 
                 {'status': new_status}
             )
             request.user = user
@@ -162,7 +162,7 @@ def test_enhanced_order_management_api():
         print(f"\n🔄 Testing bulk status update...")
         order_ids = [order.id for order in orders]
         request = factory.post(
-            '/api/enhanced-orders/bulk_update_status/', 
+            '/onesoko/enhanced-orders/bulk_update_status/', 
             {
                 'order_ids': order_ids,
                 'status': 'shipped'

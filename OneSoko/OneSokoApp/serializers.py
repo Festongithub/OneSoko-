@@ -24,6 +24,12 @@ class ProductSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     shops = serializers.SerializerMethodField()
+    tag_names = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True,
+        required=False,
+        help_text="List of tag names to associate with the product"
+    )
     
     class Meta:
         model = Product
@@ -40,6 +46,35 @@ class ProductSerializer(serializers.ModelSerializer):
             'country': shop.country,
             'logo_url': self.context.get('request').build_absolute_uri(shop.logo.url) if shop.logo and self.context.get('request') else None
         } for shop in shops]
+    
+    def create(self, validated_data):
+        """Create product and handle tag_names"""
+        tag_names = validated_data.pop('tag_names', [])
+        product = super().create(validated_data)
+        
+        # Handle tags by name
+        if tag_names:
+            from .models import Tag
+            for tag_name in tag_names:
+                tag, created = Tag.objects.get_or_create(name=tag_name.strip())
+                product.tags.add(tag)
+        
+        return product
+    
+    def update(self, instance, validated_data):
+        """Update product and handle tag_names"""
+        tag_names = validated_data.pop('tag_names', None)
+        instance = super().update(instance, validated_data)
+        
+        # Handle tags by name if provided
+        if tag_names is not None:
+            from .models import Tag
+            instance.tags.clear()
+            for tag_name in tag_names:
+                tag, created = Tag.objects.get_or_create(name=tag_name.strip())
+                instance.tags.add(tag)
+        
+        return instance
 
 # Category serializer
 class CategorySerializer(serializers.ModelSerializer):
@@ -251,7 +286,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            'id', 'user', 'message', 'type', 'priority', 'is_read', 
+            'id', 'user', 'text', 'type', 'priority', 'is_read', 
             'timestamp', 'shop', 'shop_name', 'product', 'product_name',
             'order', 'order_id', 'priority_icon', 'type_icon', 
             'time_ago', 'formatted_timestamp'

@@ -37,7 +37,7 @@ def test_wishlist_api():
     
     # Clear wishlist first for clean testing
     print("\n🧹 Clearing wishlist for clean test...")
-    request = factory.delete('/api/wishlists/clear_wishlist/')
+    request = factory.delete('/onesoko/wishlists/clear_wishlist/')
     request.user = user
     request.data = {}
     
@@ -54,7 +54,7 @@ def test_wishlist_api():
     
     # Test list endpoint
     print("\n📋 Testing list endpoint...")
-    request = factory.get('/api/wishlists/')
+    request = factory.get('/onesoko/wishlists/')
     request.user = user
     
     viewset = WishlistViewSet()
@@ -71,7 +71,7 @@ def test_wishlist_api():
     
     # Test stats endpoint
     print("\n📊 Testing stats endpoint...")
-    request = factory.get('/api/wishlists/stats/')
+    request = factory.get('/onesoko/wishlists/stats/')
     request.user = user
     
     try:
@@ -89,7 +89,7 @@ def test_wishlist_api():
         # Test add product endpoints
         for i, product in enumerate(products):
             print(f"\n➕ Test {i+1}: Adding product '{product.name}'...")
-            request = factory.post('/api/wishlists/add_product/', {'product_id': str(product.pk)})
+            request = factory.post('/onesoko/wishlists/add_product/', {'product_id': str(product.pk)})
             request.user = user
             request.data = {'product_id': str(product.pk)}
             
@@ -105,7 +105,7 @@ def test_wishlist_api():
         if products:
             product = products[0]
             print(f"\n🔍 Testing check product endpoint for '{product.name}'...")
-            request = factory.get(f'/api/wishlists/check_product/?product_id={product.pk}')
+            request = factory.get(f'/onesoko/wishlists/check_product/?product_id={product.pk}')
             request.user = user
             request.GET = {'product_id': str(product.pk)}
             
@@ -120,7 +120,7 @@ def test_wishlist_api():
         if products:
             product = products[1] if len(products) > 1 else products[0]
             print(f"\n🔄 Testing toggle product endpoint for '{product.name}'...")
-            request = factory.post('/api/wishlists/toggle_product/', {'product_id': str(product.pk)})
+            request = factory.post('/onesoko/wishlists/toggle_product/', {'product_id': str(product.pk)})
             request.user = user
             request.data = {'product_id': str(product.pk)}
             
@@ -136,7 +136,7 @@ def test_wishlist_api():
         if products:
             product = products[0]
             print(f"\n➖ Testing remove product endpoint for '{product.name}'...")
-            request = factory.delete('/api/wishlists/remove_product/', {'product_id': str(product.pk)})
+            request = factory.delete('/onesoko/wishlists/remove_product/', {'product_id': str(product.pk)})
             request.user = user
             request.data = {'product_id': str(product.pk)}
             
@@ -150,7 +150,7 @@ def test_wishlist_api():
         
         # Test products by category endpoint
         print(f"\n📂 Testing products by category endpoint...")
-        request = factory.get('/api/wishlists/products_by_category/')
+        request = factory.get('/onesoko/wishlists/products_by_category/')
         request.user = user
         
         try:
@@ -165,7 +165,7 @@ def test_wishlist_api():
         
         # Final stats
         print(f"\n📊 Final stats after testing...")
-        request = factory.get('/api/wishlists/stats/')
+        request = factory.get('/onesoko/wishlists/stats/')
         request.user = user
         
         try:

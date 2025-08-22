@@ -86,59 +86,59 @@ router.register(r'posts', UserPostViewSet, basename='posts')  # User posts/tweet
 
 # The API URLs are now determined automatically by the router
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),  # Remove 'api/' prefix since it's added in main urls.py
 ]
 
 # Authentication URLs
 urlpatterns += [
     # JWT Token endpoints
-    path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='auth_login'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='auth_login'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     # Registration endpoints
-    path('api/auth/register/', register_user, name='register_user'),
-    path('api/auth/register/shop-owner/', register_shop_owner, name='register_shop_owner'),
+    path('auth/register/', register_user, name='register_user'),
+    path('auth/register/shop-owner/', register_shop_owner, name='register_shop_owner'),
     
     # OAuth endpoints
-    path('api/auth/oauth/', oauth_login, name='oauth_login'),
+    path('auth/oauth/', oauth_login, name='oauth_login'),
     
     # Profile endpoint
-    path('api/auth/profile/', user_profile, name='user_profile'),
+    path('auth/profile/', user_profile, name='user_profile'),
     
     # Notification endpoints
-    path('api/notifications/', get_notifications, name='get_notifications'),
-    path('api/notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
-    path('api/notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
-    path('api/notifications/summary/', notification_summary, name='notification_summary'),
-    path('api/notifications/clear-read/', clear_read_notifications, name='clear_read_notifications'),
-    path('api/notifications/create-test/', create_test_notifications, name='create_test_notifications'),
+    path('notifications/', get_notifications, name='get_notifications'),
+    path('notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/summary/', notification_summary, name='notification_summary'),
+    path('notifications/clear-read/', clear_read_notifications, name='clear_read_notifications'),
+    path('notifications/create-test/', create_test_notifications, name='create_test_notifications'),
     
     # Enhanced Order Management endpoints
-    path('api/orders/create-from-cart/', create_order_from_cart, name='create_order_from_cart'),
-    path('api/orders/reports/', order_reports, name='order_reports'),
+    path('orders/create-from-cart/', create_order_from_cart, name='create_order_from_cart'),
+    path('orders/reports/', order_reports, name='order_reports'),
     
     # Advanced Analytics endpoints
-    path('api/analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
+    path('analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
     
     # Customer Loyalty & Rewards endpoints
-    path('api/loyalty/process-order-points/', process_order_loyalty_points, name='process_order_loyalty_points'),
-    path('api/loyalty/referral-info/', referral_info, name='referral_info'),
+    path('loyalty/process-order-points/', process_order_loyalty_points, name='process_order_loyalty_points'),
+    path('loyalty/referral-info/', referral_info, name='referral_info'),
     
     # Email Subscription endpoints
-    path('api/email-subscription/subscribe/', EmailSubscriptionCreateView.as_view(), name='email-subscription-create'),
-    path('api/email-subscription/confirm/', EmailSubscriptionConfirmView.as_view(), name='email-subscription-confirm'),
-    path('api/email-subscription/unsubscribe/', EmailSubscriptionUnsubscribeView.as_view(), name='email-subscription-unsubscribe'),
-    path('api/email-subscription/status/', EmailSubscriptionStatusView.as_view(), name='email-subscription-status'),
+    path('email-subscription/subscribe/', EmailSubscriptionCreateView.as_view(), name='email-subscription-create'),
+    path('email-subscription/confirm/', EmailSubscriptionConfirmView.as_view(), name='email-subscription-confirm'),
+    path('email-subscription/unsubscribe/', EmailSubscriptionUnsubscribeView.as_view(), name='email-subscription-unsubscribe'),
+    path('email-subscription/status/', EmailSubscriptionStatusView.as_view(), name='email-subscription-status'),
     
     # Profile and Social Media endpoints
-    path('api/profile/', user_profile_detail, name='user-profile-detail'),
-    path('api/profile/<str:username>/', public_profile_detail, name='public-profile-detail'),
-    path('api/profile/<str:username>/follow/', follow_user, name='follow-user'),
-    path('api/profile/<str:username>/unfollow/', unfollow_user, name='unfollow-user'),
-    path('api/profile/<str:username>/followers/', user_followers, name='user-followers'),
-    path('api/profile/<str:username>/following/', user_following, name='user-following'),
-    path('api/profile/<str:username>/posts/', user_posts, name='user-posts'),
-    path('api/profile/<str:username>/stats/', profile_stats, name='profile-stats'),
-    path('api/feed/', user_feed, name='user-feed'),
-    path('api/search/users/', search_users, name='search-users'),
+    path('profile/', user_profile_detail, name='user-profile-detail'),
+    path('profile/<str:username>/', public_profile_detail, name='public-profile-detail'),
+    path('profile/<str:username>/follow/', follow_user, name='follow-user'),
+    path('profile/<str:username>/unfollow/', unfollow_user, name='unfollow-user'),
+    path('profile/<str:username>/followers/', user_followers, name='user-followers'),
+    path('profile/<str:username>/following/', user_following, name='user-following'),
+    path('profile/<str:username>/posts/', user_posts, name='user-posts'),
+    path('profile/<str:username>/stats/', profile_stats, name='profile-stats'),
+    path('feed/', user_feed, name='user-feed'),
+    path('search/users/', search_users, name='search-users'),
 ] 

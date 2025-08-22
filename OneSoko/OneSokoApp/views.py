@@ -88,7 +88,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        if self.action in ['list', 'retrieve', 'search', 'locations']:
+        if self.action in ['list', 'retrieve', 'search', 'locations', 'products', 'popular']:
             permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsShopOwner]
@@ -251,12 +251,24 @@ class ShopViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def add_product(self, request, pk=None):
+        """Add a product to the shop"""
         shop = self.get_object()
-        serializer = ProductSerializer(data=request.data)
+        
+        # Ensure the user owns this shop
+        if shop.shopowner != request.user:
+            return Response(
+                {'detail': 'You do not have permission to add products to this shop.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = ProductSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             product = serializer.save()
             shop.products.add(product)
-            return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
+            
+            # Return the created product data
+            response_serializer = ProductSerializer(product, context={'request': request})
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'], url_path='products/(?P<product_id>[^/.]+)')
