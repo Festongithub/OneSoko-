@@ -50,6 +50,12 @@ from .profile_views import (
     profile_stats,
     search_users,
 )
+from .health_views import (
+    health_check,
+    health_check_detailed,
+    readiness_check,
+    liveness_check,
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -141,4 +147,10 @@ urlpatterns += [
     path('profile/<str:username>/stats/', profile_stats, name='profile-stats'),
     path('feed/', user_feed, name='user-feed'),
     path('search/users/', search_users, name='search-users'),
+    
+    # Health check endpoints
+    path('health/', health_check, name='health-check'),
+    path('health/detailed/', health_check_detailed, name='health-check-detailed'),
+    path('health/ready/', readiness_check, name='readiness-check'),
+    path('health/live/', liveness_check, name='liveness-check'),
 ] 

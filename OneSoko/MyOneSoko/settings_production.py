@@ -6,34 +6,78 @@ from pathlib import Path
 
 # Import all settings from main settings.py
 from .settings import *
+import dj_database_url
 
 # Re-define BASE_DIR for this file context
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
 DEBUG = False
-ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com', 'api.yourdomain.com']
+ALLOWED_HOSTS = [
+    'yourdomain.com', 
+    'www.yourdomain.com', 
+    'api.yourdomain.com',
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+]
+
+# Add environment-based allowed hosts
+env_hosts = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS.extend([host.strip() for host in env_hosts if host.strip()])
 
 # Security headers
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if SECURE_SSL_REDIRECT else None
+SECURE_HSTS_SECONDS = 31536000 if SECURE_SSL_REDIRECT else 0  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_SSL_REDIRECT
+SECURE_HSTS_PRELOAD = SECURE_SSL_REDIRECT
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
 # Session security
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # CSRF protection
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
 CSRF_COOKIE_HTTPONLY = True
 CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'https://yourdomain.com',
+    'https://www.yourdomain.com',
+]
+
+# Add environment-based trusted origins
+env_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in env_origins if origin.strip()])
+
+# Database configuration for production
+# Use DATABASE_URL environment variable if available, otherwise use default MySQL config
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    }
+else:
+    # Fallback to container-friendly MySQL config
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'onesoko_db'),
+            'USER': os.environ.get('DB_USER', 'onesoko_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'onesoko_password'),
+            'HOST': os.environ.get('DB_HOST', 'db'),  # Docker service name
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
 
 # Performance settings
 CONN_MAX_AGE = 600  # Keep database connections alive

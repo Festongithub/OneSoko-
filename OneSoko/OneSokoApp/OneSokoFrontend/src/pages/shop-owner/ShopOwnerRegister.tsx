@@ -2,17 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
-import { triggerPasswordSave, setupPasswordSave, enhanceFormForPasswordManager } from '../../utils/passw                        <input
-                        id="firstName"
-                        name="firstName"
-                        type="text"
-                        autoComplete="given-name"
-                        required
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        className={errors.firstName ? 'input-error' : 'input'}
-                        placeholder="First name"
-                      />';
+import { triggerPasswordSave, setupPasswordSave, enhanceFormForPasswordManager } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const ShopOwnerRegister: React.FC = () => {
