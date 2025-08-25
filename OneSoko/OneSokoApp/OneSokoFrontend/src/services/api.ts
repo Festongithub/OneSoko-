@@ -1,7 +1,10 @@
 import axios, { type AxiosResponse } from 'axios';
 import type { AuthResponse } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api'; // Direct Django API
+// Use environment-aware API URL - production will use relative paths through Nginx
+const API_BASE_URL = import.meta.env.DEV 
+  ? 'http://localhost:8000/api'  // Development: direct Django API
+  : '/api';                      // Production: through Nginx proxy
 
 // Create axios instance with default config
 const api = axios.create({

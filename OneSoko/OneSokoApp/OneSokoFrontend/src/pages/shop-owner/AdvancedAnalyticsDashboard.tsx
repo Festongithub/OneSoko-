@@ -4,9 +4,8 @@ import {
   CurrencyDollarIcon,
   UsersIcon,
   ShoppingBagIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-  CalendarIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ArrowUpIcon,
   ArrowDownIcon,
 } from '@heroicons/react/24/outline';
@@ -269,7 +268,7 @@ const AdvancedAnalyticsDashboard: React.FC = () => {
         <StatCard
           title="Conversion Rate"
           value={formatPercentage(dashboardData.overview.conversion_rate)}
-          icon={TrendingUpIcon}
+          icon={ArrowTrendingUpIcon}
           color="bg-orange-500"
         />
       </div>
@@ -279,7 +278,7 @@ const AdvancedAnalyticsDashboard: React.FC = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'overview', name: 'Overview', icon: ChartBarIcon },
-            { id: 'sales', name: 'Sales Analytics', icon: TrendingUpIcon },
+            { id: 'sales', name: 'Sales Analytics', icon: ArrowTrendingUpIcon },
             { id: 'customers', name: 'Customer Analytics', icon: UsersIcon },
           ].map((tab) => (
             <button

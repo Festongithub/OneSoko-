@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your OneSoko Subscription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9fafb;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OneSoko</h1>
+        <p>Your One-Stop Marketplace</p>
+    </div>
+    
+    <div class="content">
+        <h2>Welcome to OneSoko Newsletter!</h2>
+        
+        <p>Hi there!</p>
+        
+        <p>Thank you for subscribing to the OneSoko newsletter. You're now part of our community of shoppers who love discovering amazing products from local businesses across Kenya.</p>
+        
+        <p>To complete your subscription, please click the button below to confirm your email address:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ confirmation_url }}" class="button">Confirm My Subscription</a>
+        </div>
+        
+        <p>Once confirmed, you'll receive:</p>
+        <ul>
+            <li>📢 Latest product updates and new arrivals</li>
+            <li>🎯 Exclusive promotions and discounts</li>
+            <li>🏪 Featured shops and local business highlights</li>
+            <li>💡 Shopping tips and marketplace news</li>
+        </ul>
+        
+        <p>If you didn't subscribe to this newsletter, you can safely ignore this email.</p>
+        
+        <p>Happy shopping!</p>
+        <p><strong>The OneSoko Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>© {{ "now"|date:"Y" }} OneSoko. All rights reserved.</p>
+        <p>Made with ❤️ in Kenya</p>
+        <p>If you can't click the button above, copy and paste this link into your browser:</p>
+        <p>{{ confirmation_url }}</p>
+    </div>
+</body>
+</html>

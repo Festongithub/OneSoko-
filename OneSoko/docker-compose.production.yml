@@ -1,0 +1,157 @@
+# OneSoko Production Docker Compose Configuration
+# This file sets up a complete production environment with:
+# - Django backend with Gunicorn
+# - React frontend (built into static files)
+# - MySQL database
+# - Redis cache
+# - Nginx reverse proxy
+# - Celery workers for background tasks
+
+version: '3.8'
+
+services:
+  # Django Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: onesoko_web
+    restart: unless-stopped
+    environment:
+      - DJANGO_ENV=production
+      - DATABASE_URL=mysql://onesoko_user:${MYSQL_PASSWORD:-onesoko_password}@db:3306/onesoko_db
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,yourdomain.com,www.yourdomain.com}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:8080,https://yourdomain.com,https://www.yourdomain.com}
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-your-email@gmail.com}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-your-app-password}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@yourdomain.com}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - onesoko_network
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: onesoko_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: onesoko_db
+      MYSQL_USER: onesoko_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-onesoko_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "onesoko_user", "-p${MYSQL_PASSWORD:-onesoko_password}"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - onesoko_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: onesoko_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+    networks:
+      - onesoko_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: onesoko_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-production.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+    networks:
+      - onesoko_network
+
+  # Celery Worker (for background tasks)
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: onesoko_celery
+    restart: unless-stopped
+    command: celery -A MyOneSoko worker --loglevel=info --concurrency=2
+    environment:
+      - DJANGO_ENV=production
+      - DATABASE_URL=mysql://onesoko_user:${MYSQL_PASSWORD:-onesoko_password}@db:3306/onesoko_db
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-this-in-production}
+    volumes:
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - onesoko_network
+
+  # Celery Beat (for scheduled tasks)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: onesoko_celery_beat
+    restart: unless-stopped
+    command: celery -A MyOneSoko beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DJANGO_ENV=production
+      - DATABASE_URL=mysql://onesoko_user:${MYSQL_PASSWORD:-onesoko_password}@db:3306/onesoko_db
+      - REDIS_URL=redis://redis:6379/1
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-this-in-production}
+    volumes:
+      - logs_volume:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - onesoko_network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  logs_volume:
+    driver: local
+
+networks:
+  onesoko_network:
+    driver: bridge

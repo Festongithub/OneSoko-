@@ -21,7 +21,7 @@
 					"raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"testuser@example.com\",\n    \"password\": \"testpass123\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/users/",
+					"raw": "{{base_url}}/onesoko/users/",
 					"host": [
 						"{{base_url}}"
 					],
@@ -48,7 +48,7 @@
 					"raw": "{\n    \"username\": \"shopowner\",\n    \"email\": \"shopowner@example.com\",\n    \"password\": \"shopowner123\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/shopowners/",
+					"raw": "{{base_url}}/onesoko/shopowners/",
 					"host": [
 						"{{base_url}}"
 					],
@@ -75,7 +75,7 @@
 					"raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"testpass123\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/token/",
+					"raw": "{{base_url}}/onesoko/token/",
 					"host": [
 						"{{base_url}}"
 					],
@@ -115,7 +115,7 @@
 					"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/token/refresh/",
+					"raw": "{{base_url}}/onesoko/token/refresh/",
 					"host": [
 						"{{base_url}}"
 					],
@@ -151,7 +151,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/userprofiles/",
+					"raw": "{{base_url}}/onesoko/userprofiles/",
 					"host": [
 						"{{base_url}}"
 					],

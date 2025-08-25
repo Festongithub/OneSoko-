@@ -1,0 +1,41 @@
+INFO 2025-08-22 11:58:14,205 autoreload 252979 139842784088320 Watching for file changes with StatReloader
+ERROR 2025-08-22 11:58:28,389 basehttp 252979 139842646177472 "GET /?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755863908334 HTTP/1.1" 500 59
+ERROR 2025-08-22 11:59:37,045 basehttp 252979 139842637784768 "GET /onesoko/products/ HTTP/1.1" 500 59
+INFO 2025-08-22 11:59:58,942 autoreload 252979 139842784088320 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:00:00,125 autoreload 254407 140549497364736 Watching for file changes with StatReloader
+INFO 2025-08-22 12:00:11,320 autoreload 254407 140549497364736 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:00:12,532 autoreload 254598 139952487485696 Watching for file changes with StatReloader
+INFO 2025-08-22 12:02:26,046 autoreload 256566 139969466093824 Watching for file changes with StatReloader
+INFO 2025-08-22 12:03:48,003 basehttp 256566 139969395947200 "GET /onesoko/products/ HTTP/1.1" 301 0
+INFO 2025-08-22 12:04:13,321 basehttp 256566 139969395947200 "GET /onesoko/shops/ HTTP/1.1" 301 0
+INFO 2025-08-22 12:05:36,208 basehttp 256566 139969395947200 "HEAD / HTTP/1.1" 301 0
+INFO 2025-08-22 12:05:57,552 autoreload 256566 139969466093824 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:05:59,769 autoreload 259534 140547327717632 Watching for file changes with StatReloader
+INFO 2025-08-22 12:06:24,662 autoreload 259534 140547327717632 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:06:25,889 autoreload 259882 140562033541376 Watching for file changes with StatReloader
+INFO 2025-08-22 12:06:39,478 autoreload 259882 140562033541376 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:06:40,654 autoreload 260092 139945876275456 Watching for file changes with StatReloader
+INFO 2025-08-22 12:07:09,379 autoreload 260092 139945876275456 /home/flamers/OneSoko-/OneSoko/MyOneSoko/settings_production.py changed, reloading.
+INFO 2025-08-22 12:07:10,538 autoreload 260462 140188292169984 Watching for file changes with StatReloader
+INFO 2025-08-22 12:07:58,643 autoreload 261380 140067648114944 Watching for file changes with StatReloader
+INFO 2025-08-22 12:08:16,524 basehttp 261380 140067578312384 "GET /onesoko/shops/ HTTP/1.1" 200 16886
+INFO 2025-08-22 12:09:25,479 basehttp 261380 140067578312384 "GET / HTTP/1.1" 200 752
+INFO 2025-08-22 12:09:47,939 basehttp 261380 140067578312384 "GET /onesoko/shops/ HTTP/1.1" 200 16886
+INFO 2025-08-22 12:10:01,397 basehttp 261380 140067578312384 "GET /?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864601357 HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:09,378 basehttp 261380 140067578312384 "GET /shops?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864609350 HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:46,034 basehttp 261380 140067578312384 "GET /onesoko/shops?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864645954 HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:48,335 basehttp 261380 140067578312384 "GET /onesoko/shops?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864648312 HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:57,002 basehttp 261380 140067568871104 "GET /onesoko/shops HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:57,308 basehttp 261380 140067568871104 "GET /static/assets/index-tHmxozyH.js HTTP/1.1" 200 752
+INFO 2025-08-22 12:10:57,320 basehttp 261380 140067552085696 "GET /static/assets/vendor-gH-7aFTg.js HTTP/1.1" 200 11827
+INFO 2025-08-22 12:10:57,322 basehttp 261380 140067205019328 "GET /static/assets/router-Br5hKVUl.js HTTP/1.1" 200 33107
+INFO 2025-08-22 12:10:57,323 basehttp 261380 140067196626624 "GET /static/assets/ui-D-aLrmS2.js HTTP/1.1" 200 5023
+INFO 2025-08-22 12:10:57,328 basehttp 261380 140067560478400 "GET /static/assets/index-B9PBb0BC.css HTTP/1.1" 200 117510
+INFO 2025-08-22 12:10:57,870 basehttp 261380 140067196626624 "GET /static/vite.svg HTTP/1.1" 200 1497
+WARNING 2025-08-22 12:11:04,982 log 261380 140067196626624 Unauthorized: /onesoko/
+WARNING 2025-08-22 12:11:04,984 basehttp 261380 140067196626624 "GET /onesoko/ HTTP/1.1" 401 58
+INFO 2025-08-22 12:11:05,734 basehttp 261380 140067196626624 "GET /favicon.ico HTTP/1.1" 200 752
+INFO 2025-08-22 12:12:49,450 basehttp 261380 140067578312384 "GET /?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864769428 HTTP/1.1" 200 752
+INFO 2025-08-22 12:12:59,401 basehttp 261380 140067578312384 "GET /onseoko/?id=14a40a47-6fff-4ebd-8e8d-0f8f2ad17f5b&vscodeBrowserReqId=1755864779386 HTTP/1.1" 200 752
+WARNING 2025-08-22 12:13:07,364 log 261380 140067196626624 Unauthorized: /onesoko/
+WARNING 2025-08-22 12:13:07,365 basehttp 261380 140067196626624 "GET /onesoko/ HTTP/1.1" 401 58

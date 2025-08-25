@@ -1,0 +1,23 @@
+[Unit]
+Description=OneSoko Django Application
+Documentation=https://github.com/your-repo/OneSoko
+After=network.target
+Wants=mysql.service redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/OneSoko
+Environment=DJANGO_ENV=production
+Environment=PATH=/path/to/OneSoko/env/bin
+ExecStart=/path/to/OneSoko/env/bin/gunicorn --config gunicorn.conf.py MyOneSoko.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -113,7 +113,10 @@ const ExplorePage: React.FC = () => {
             ordering: filters.sortBy === 'rating' ? '-rating' : '-created_at'
           }
         });
-        setShops(response.data.results || response.data);
+        const shopsData = response.data.results || response.data;
+        console.log('Loaded shops data:', shopsData);
+        console.log('First shop shopId:', shopsData[0]?.shopId);
+        setShops(shopsData);
         setProducts([]);
       }
     } catch (error) {
@@ -537,6 +540,7 @@ const ExplorePage: React.FC = () => {
                         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                           <Link
                             to={`/shops/${shop.shopId}`}
+                            onClick={() => console.log('Navigating to shop:', shop.shopId, 'Full shop object:', shop)}
                             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
                           >
                             <BuildingStorefrontIcon className="w-4 h-4" />

@@ -12,11 +12,11 @@ class UserAPITestCase(APITestCase):
     
     def setUp(self):
         self.client = APIClient()
-        self.user_registration_url = '/api/users/'
-        self.shopowner_registration_url = '/api/shopowners/'
-        self.token_url = '/api/token/'
-        self.token_refresh_url = '/api/token/refresh/'
-        self.userprofile_url = '/api/userprofiles/'
+        self.user_registration_url = '/onesoko/users/'
+        self.shopowner_registration_url = '/onesoko/shopowners/'
+        self.token_url = '/onesoko/token/'
+        self.token_refresh_url = '/onesoko/token/refresh/'
+        self.userprofile_url = '/onesoko/userprofiles/'
         
         # Test data
         self.valid_user_data = {
@@ -173,8 +173,8 @@ class AuthenticationAPITestCase(APITestCase):
     
     def setUp(self):
         self.client = APIClient()
-        self.token_url = '/api/token/'
-        self.token_refresh_url = '/api/token/refresh/'
+        self.token_url = '/onesoko/token/'
+        self.token_refresh_url = '/onesoko/token/refresh/'
         
         # Create test user
         self.user = User.objects.create_user(
@@ -207,7 +207,7 @@ class AuthenticationAPITestCase(APITestCase):
         
         # Test that we can use the access token
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
-        response = self.client.get('/api/userprofiles/')
+        response = self.client.get('/onesoko/userprofiles/')
         self.assertNotEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_token_obtain_invalid_credentials(self):
@@ -264,7 +264,7 @@ class UserProfileAPITestCase(APITestCase):
     
     def setUp(self):
         self.client = APIClient()
-        self.userprofile_url = '/api/userprofiles/'
+        self.userprofile_url = '/onesoko/userprofiles/'
         
         # Create test users
         self.user1 = User.objects.create_user(
@@ -390,9 +390,9 @@ class UserAPIIntegrationTestCase(APITestCase):
     
     def setUp(self):
         self.client = APIClient()
-        self.user_registration_url = '/api/users/'
-        self.token_url = '/api/token/'
-        self.userprofile_url = '/api/userprofiles/'
+        self.user_registration_url = '/onesoko/users/'
+        self.token_url = '/onesoko/token/'
+        self.userprofile_url = '/onesoko/userprofiles/'
 
     def test_complete_user_workflow(self):
         """Test complete user registration and profile workflow"""
@@ -448,7 +448,7 @@ class UserAPIIntegrationTestCase(APITestCase):
             'password': 'shopowner123'
         }
         
-        registration_response = self.client.post('/api/shopowners/', shopowner_data)
+        registration_response = self.client.post('/onesoko/shopowners/', shopowner_data)
         self.assertEqual(registration_response.status_code, status.HTTP_201_CREATED)
         
         # 2. Verify user profile was created with is_shopowner=True

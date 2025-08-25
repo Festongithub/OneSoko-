@@ -318,7 +318,7 @@ class EnhancedOrderViewSet(viewsets.ModelViewSet):
             {
                 'timestamp': notif.timestamp,
                 'status': 'Updated',
-                'description': notif.message,
+                'description': notif.text,
                 'location': 'System'
             }
             for notif in tracking_notifications

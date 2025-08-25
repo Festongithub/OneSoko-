@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "build-with-types": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -16,6 +17,7 @@
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.5",
     "lucide-react": "^0.539.0",

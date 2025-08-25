@@ -4,14 +4,41 @@ export interface User {
   email: string;
   first_name?: string;
   last_name?: string;
+  date_joined?: string;
+  profile?: UserProfile;
 }
 
 export interface UserProfile {
   id: number;
   user: User;
+  bio?: string;
+  avatar_url?: string;
+  cover_photo_url?: string;
   phone_number?: string;
   address?: string;
+  website?: string;
+  date_of_birth?: string;
+  location?: string;
   is_shopowner: boolean;
+  is_public: boolean;
+  is_email_verified: boolean;
+  twitter_url?: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  linkedin_url?: string;
+  followers_count: number;
+  following_count: number;
+  is_verified: boolean;
+  verification_type?: string;
+  verification_badge: {
+    is_verified: boolean;
+    type?: string;
+    color?: string;
+  };
+  full_name: string;
+  display_name: string;
+  profile_completion_percentage: number;
+  is_following?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -32,11 +59,21 @@ export interface Product {
   variants?: ProductVariant[];
   reviews?: Review[];
   average_rating?: number;
+  shops?: ShopBasicInfo[];
   // Additional properties for homepage display
   originalPrice?: number;
   rating?: number;
   badge?: string;
   shop?: string;
+}
+
+export interface ShopBasicInfo {
+  shopId: string;
+  name: string;
+  location: string;
+  city: string;
+  country: string;
+  logo_url?: string;
 }
 
 export interface Category {

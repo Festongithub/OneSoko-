@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Product, Shop, ShopOwner, Category, Tag, Review, ProductVariant, UserProfile, Order, OrderItem, Payment, AuditLog, Wishlist, Message, Notification,
     ShopReview, ShopReviewResponse, ShopRatingSummary, ReviewHelpfulVote,
-    OrderTracking, OrderAnalytics, ShippingAddress
+    OrderTracking, OrderAnalytics, ShippingAddress, EmailSubscription,
+    UserFollow, UserPost, PostLike, PostReply
 )
 
 # Inline for ProductVariant in Product admin
@@ -97,8 +98,77 @@ class OrderAdmin(admin.ModelAdmin):
 # UserProfile admin customization
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'bio', 'address')
-    search_fields = ('user__username', 'bio', 'address')
+    list_display = ('user', 'display_name', 'is_shopowner', 'is_verified', 'location', 'followers_count', 'following_count')
+    list_filter = ('is_shopowner', 'is_verified', 'verification_type', 'is_public', 'is_email_verified')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'bio', 'location')
+    readonly_fields = ('followers_count', 'following_count', 'profile_completion_percentage')
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('user', 'bio', 'avatar', 'cover_photo')
+        }),
+        ('Contact Information', {
+            'fields': ('phone_number', 'address', 'location', 'website')
+        }),
+        ('Personal Information', {
+            'fields': ('date_of_birth',)
+        }),
+        ('Social Media Links', {
+            'fields': ('twitter_url', 'facebook_url', 'instagram_url', 'linkedin_url'),
+            'classes': ('collapse',)
+        }),
+        ('Account Settings', {
+            'fields': ('is_shopowner', 'is_public', 'is_email_verified')
+        }),
+        ('Verification', {
+            'fields': ('is_verified', 'verification_type')
+        }),
+        ('Statistics', {
+            'fields': ('followers_count', 'following_count', 'profile_completion_percentage'),
+            'classes': ('collapse',)
+        }),
+    )
+
+# User Follow admin
+@admin.register(UserFollow)
+class UserFollowAdmin(admin.ModelAdmin):
+    list_display = ('follower', 'following', 'created_at', 'notifications_enabled')
+    list_filter = ('notifications_enabled', 'created_at')
+    search_fields = ('follower__username', 'following__username')
+    raw_id_fields = ('follower', 'following')
+
+# User Post admin
+@admin.register(UserPost)
+class UserPostAdmin(admin.ModelAdmin):
+    list_display = ('user', 'content_preview', 'post_type', 'likes_count', 'replies_count', 'created_at', 'is_deleted')
+    list_filter = ('post_type', 'is_deleted', 'created_at')
+    search_fields = ('user__username', 'content')
+    raw_id_fields = ('user', 'related_product', 'related_shop')
+    readonly_fields = ('likes_count', 'reposts_count', 'replies_count')
+    
+    def content_preview(self, obj):
+        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    content_preview.short_description = 'Content Preview'
+
+# Post Like admin
+@admin.register(PostLike)
+class PostLikeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'post', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user__username', 'post__content')
+    raw_id_fields = ('user', 'post')
+
+# Post Reply admin
+@admin.register(PostReply)
+class PostReplyAdmin(admin.ModelAdmin):
+    list_display = ('user', 'post', 'content_preview', 'created_at', 'is_deleted')
+    list_filter = ('is_deleted', 'created_at')
+    search_fields = ('user__username', 'content', 'post__content')
+    raw_id_fields = ('user', 'post')
+    
+    def content_preview(self, obj):
+        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    content_preview.short_description = 'Content Preview'
 
 # Register other models with default admin
 admin.site.register(Category)
@@ -212,6 +282,69 @@ class ShippingAddressAdmin(admin.ModelAdmin):
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
+
+# Email Subscription admin customization
+@admin.register(EmailSubscription)
+class EmailSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'is_active', 'is_confirmed', 'get_subscription_types', 'created_at', 'confirmed_at')
+    search_fields = ('email', 'user__username', 'user__first_name', 'user__last_name')
+    list_filter = ('is_active', 'subscription_types', 'created_at', 'confirmed_at')
+    readonly_fields = ('subscriptionId', 'created_at', 'updated_at', 'confirmation_token')
+    date_hierarchy = 'created_at'
+    
+    def get_subscription_types(self, obj):
+        """Display subscription types as a comma-separated string"""
+        return ', '.join(obj.subscription_types) if obj.subscription_types else 'None'
+    get_subscription_types.short_description = 'Subscription Types'
+    
+    def is_confirmed(self, obj):
+        """Display confirmation status"""
+        return obj.is_confirmed()
+    is_confirmed.boolean = True
+    is_confirmed.short_description = 'Confirmed'
+    
+    actions = ['mark_as_unsubscribed', 'mark_as_active', 'confirm_subscriptions']
+    
+    def mark_as_unsubscribed(self, request, queryset):
+        """Mark selected subscriptions as unsubscribed"""
+        updated = 0
+        for subscription in queryset:
+            subscription.unsubscribe()
+            updated += 1
+        self.message_user(request, f'{updated} subscription(s) marked as unsubscribed.')
+    mark_as_unsubscribed.short_description = 'Mark as unsubscribed'
+    
+    def mark_as_active(self, request, queryset):
+        """Mark selected subscriptions as active"""
+        updated = queryset.update(is_active=True, unsubscribed_at=None)
+        self.message_user(request, f'{updated} subscription(s) marked as active.')
+    mark_as_active.short_description = 'Mark as active'
+    
+    def confirm_subscriptions(self, request, queryset):
+        """Confirm selected subscriptions"""
+        updated = 0
+        for subscription in queryset.filter(confirmed_at__isnull=True):
+            subscription.confirm_subscription()
+            updated += 1
+        self.message_user(request, f'{updated} subscription(s) confirmed.')
+    confirm_subscriptions.short_description = 'Confirm subscriptions'
+    
+    fieldsets = (
+        ('Subscription Information', {
+            'fields': ('subscriptionId', 'email', 'subscription_types', 'is_active')
+        }),
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Confirmation Details', {
+            'fields': ('confirmation_token', 'confirmed_at')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'unsubscribed_at', 'last_email_sent'),
             'classes': ('collapse',)
         })
     )

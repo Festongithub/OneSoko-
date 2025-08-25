@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import AddToCartButton from '../../components/cart/AddToCartButton';
+import QuickLinksWidget from '../../components/layout/QuickLinksWidget';
 import type { Product } from '../../types';
 
 // Mock data - replace with real API calls later
@@ -328,47 +329,118 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="bg-neutral-50 dark:bg-neutral-900">
       {/* Hero Section */}
-      <section className="relative bg-gradient-primary text-white">
-        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2 animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Discover Amazing Products
+            <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6">
+              <SparklesIcon className="w-4 h-4 mr-2" />
+              Enterprise E-commerce Platform
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
+              <span className="block">Scale Your Business</span>
+              <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                With OneSoko
+              </span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
-              Shop from thousands of local businesses and find exactly what you're looking for
+            
+            <p className="text-xl md:text-2xl mb-10 max-w-4xl mx-auto text-white/90 leading-relaxed">
+              Connect with thousands of businesses and customers. Powerful tools for growth, 
+              analytics for insights, and enterprise-grade security for peace of mind.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <button 
                 onClick={handleStartShopping}
-                className="btn-lg bg-white text-primary-600 hover:bg-gray-50 flex items-center justify-center"
+                className="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary-700 bg-white hover:bg-neutral-50 rounded-xl transition-all shadow-elevated hover:shadow-xl"
               >
-                Start Shopping
+                Start Exploring
                 <ChevronRightIcon className="w-5 h-5 ml-2" />
               </button>
-              <Link to="/register/shop-owner" className="btn-lg border-white text-white hover:bg-white hover:text-primary-600">
-                Become a Seller
+              <Link 
+                to="/register/shop-owner" 
+                className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 hover:border-white/50 hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm"
+              >
+                Become a Partner
               </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-white/20">
+              <div className="text-center">
+                <div className="text-2xl font-bold">10k+</div>
+                <div className="text-sm text-white/70">Active Businesses</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">50k+</div>
+                <div className="text-sm text-white/70">Products Listed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">99.9%</div>
+                <div className="text-sm text-white/70">Uptime</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">24/7</div>
+                <div className="text-sm text-white/70">Support</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-white">
+      {/* Quick Links Section */}
+      <section className="py-12 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
+              Quick Access Dashboard
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+              Access your most important tools and features instantly. Designed for efficiency and productivity.
+            </p>
+          </div>
+          <QuickLinksWidget 
+            variant="grid" 
+            showTitle={false}
+            maxItems={8}
+            className="max-w-5xl mx-auto"
+          />
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-neutral-50 dark:bg-neutral-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+              Enterprise-Grade Features
+            </h2>
+            <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
+              Built for scale, designed for efficiency. Our platform provides everything you need 
+              to grow your business and serve your customers better.
+            </p>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
-                  <feature.icon className="w-8 h-8 text-primary-600" />
+              <div key={index} className="text-center group">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl mb-6 shadow-enterprise group-hover:shadow-elevated transition-all duration-200">
+                  <feature.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-secondary-600">
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -378,14 +450,14 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-secondary-50">
+      <section className="py-20 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-secondary-900 mb-4">
-              Shop by Category
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+              Business Categories
             </h2>
-            <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-              Explore our wide range of categories and find exactly what you need
+            <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+              Connect with businesses across diverse industries and find the products and services you need
             </p>
           </div>
           

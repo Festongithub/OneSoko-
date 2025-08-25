@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
+from decouple import config
+import dj_database_url
+import mimetypes
+
+# Add ES6 module mime type for proper JavaScript module serving
+mimetypes.add_type("text/javascript", ".js", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,19 +61,36 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-        'http://localhost:5173',
-        'http://127.0.0.1.5173',
+    'http://localhost:3000',
+    'http://localhost:5173',  # Vite dev server
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',  # Vite dev server
+    'http://localhost:8080',  # Nginx production
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# For development only - set to False in production
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_CREDENTIALS = True
+
+# Additional CORS settings for better frontend integration
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 ROOT_URLCONF = 'MyOneSoko.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,11 +113,11 @@ WSGI_APPLICATION = 'MyOneSoko.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'OneSokodb',  # TODO: Replace with your MySQL database name
-        'USER': 'flamers',  # TODO: Replace with your MySQL username
-        'PASSWORD': 'Feston@01',  # TODO: Replace with your MySQL password
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.environ.get('DB_NAME', 'OneSokodb'),
+        'USER': os.environ.get('DB_USER', 'flamers'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Feston@01'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
@@ -136,7 +159,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Additional locations of static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'OneSokoApp/OneSokoFrontend/dist'),  # Frontend build files
+    os.path.join(BASE_DIR, 'static'),  # Additional static files
+]
+
+# Static files configuration for production
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Whitenoise configuration for serving static files (optional for deployment)
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Media files (user uploaded content)
 
@@ -241,3 +279,17 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development - prints emails to console
+DEFAULT_FROM_EMAIL = 'noreply@onesoko.co.ke'
+SERVER_EMAIL = 'server@onesoko.co.ke'
+
+# For production, uncomment and configure these settings:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # or your email provider
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-email-password'
