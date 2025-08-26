@@ -113,7 +113,12 @@ function App() {
                             const sampleProduct = {
                               productId: 'sample-1',
                               name: 'Sample Product 1',
-                              price: 29.99,
+                              description: 'A great product for your needs',
+                              price: '29.99',
+                              quantity: 10,
+                              discount: '0',
+                              is_active: true,
+                              tags: [],
                               image: '',
                               shopId: 'sample-shop'
                             };
@@ -138,7 +143,12 @@ function App() {
                             const sampleProduct = {
                               productId: 'sample-2',
                               name: 'Sample Product 2',
-                              price: 49.99,
+                              description: 'Another amazing product',
+                              price: '49.99',
+                              quantity: 5,
+                              discount: '0',
+                              is_active: true,
+                              tags: [],
                               image: '',
                               shopId: 'sample-shop'
                             };
@@ -163,7 +173,12 @@ function App() {
                             const sampleProduct = {
                               productId: 'sample-3',
                               name: 'Sample Product 3',
-                              price: 19.99,
+                              description: 'The perfect choice for you',
+                              price: '19.99',
+                              quantity: 20,
+                              discount: '0',
+                              is_active: true,
+                              tags: [],
                               image: '',
                               shopId: 'sample-shop'
                             };

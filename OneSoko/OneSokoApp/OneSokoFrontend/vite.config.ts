@@ -9,13 +9,18 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['@headlessui/react', '@heroicons/react', 'lucide-react'],
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+            if (id.includes('react-router')) return 'vendor-router';
+            if (id.includes('@headlessui') || id.includes('@heroicons') || id.includes('lucide-react')) return 'vendor-ui';
+            if (id.includes('zustand') || id.includes('@tanstack')) return 'vendor-state';
+            return 'vendor';
+          }
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 700,
   },
   server: {
     proxy: {

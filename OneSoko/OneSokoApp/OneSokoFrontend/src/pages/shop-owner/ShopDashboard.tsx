@@ -61,9 +61,13 @@ const ShopDashboard: React.FC = () => {
       try {
         if (userShop) {
           // Get shop products
-          const products = await shopApi.getProducts(userShop.shopId);
-          setRecentProducts(products.slice(0, 5));
-          
+          const shopId = userShop.shopId;
+          let products: Product[] = [];
+          if (shopId) {
+            products = await shopApi.getProducts(shopId);
+            setRecentProducts(products.slice(0, 5));
+          }
+
           // Calculate stats
           setStats({
             totalProducts: products.length,
@@ -311,11 +315,11 @@ const ShopDashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        product.quantity > 10 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                        product.quantity > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' : 
+                        (product.quantity ?? product.stock_quantity ?? 0) > 10 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                        (product.quantity ?? product.stock_quantity ?? 0) > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' : 
                         'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       }`}>
-                        {product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
+                        {(product.quantity ?? product.stock_quantity ?? 0) > 0 ? `${product.quantity ?? product.stock_quantity} in stock` : 'Out of stock'}
                       </span>
                       <div className="flex items-center space-x-1">
                         <Link
@@ -325,7 +329,7 @@ const ShopDashboard: React.FC = () => {
                           <PencilIcon className="h-4 w-4" />
                         </Link>
                         <button
-                          onClick={() => handleDeleteProduct(product.productId)}
+                          onClick={() => product.productId && handleDeleteProduct(product.productId)}
                           className="p-1 text-secondary-400 hover:text-red-600 dark:hover:text-red-400"
                         >
                           <TrashIcon className="h-4 w-4" />

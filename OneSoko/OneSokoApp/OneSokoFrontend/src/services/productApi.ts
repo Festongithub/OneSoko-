@@ -22,8 +22,8 @@ export const productApi = {
     return response.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    await api.delete(`/products/${id}/`);
+  delete: async (id: string | number): Promise<void> => {
+    await api.delete(`/products/${String(id)}/`);
   },
 
   search: async (query: string): Promise<Product[]> => {
