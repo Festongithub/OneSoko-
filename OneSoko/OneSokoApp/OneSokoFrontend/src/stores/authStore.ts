@@ -8,6 +8,8 @@ interface AuthState {
   userProfile: UserProfile | null;
   shop: Shop | null;
   accessToken: string | null;
+  // Keep a `token` alias to satisfy code that expects `token` property
+  token?: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -26,6 +28,7 @@ interface AuthState {
 }
 
 interface RegisterUserData {
+  username?: string;
   email: string;
   password: string;
   first_name: string;
@@ -267,8 +270,9 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         userProfile: state.userProfile,
         shop: state.shop,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
+  accessToken: state.accessToken,
+  token: state.accessToken, // alias
+  refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         userType: state.userType,
       }),

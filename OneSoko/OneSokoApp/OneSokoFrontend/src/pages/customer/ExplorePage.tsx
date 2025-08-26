@@ -439,7 +439,7 @@ const ExplorePage: React.FC = () => {
                             <span className="text-lg font-bold text-gray-900 dark:text-white">
                               ${product.price}
                             </span>
-                            {product.promotional_price && parseFloat(product.promotional_price) > parseFloat(product.price) && (
+                            {product.promotional_price && Number(product.promotional_price) > Number(product.price) && (
                               <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
                                 ${product.promotional_price}
                               </span>
@@ -448,13 +448,13 @@ const ExplorePage: React.FC = () => {
 
                           {/* Stock Status */}
                           <div className="mt-2">
-                            {product.quantity === 0 ? (
+                            {((product.quantity ?? product.stock_quantity) || 0) === 0 ? (
                               <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                                 Out of Stock
                               </span>
-                            ) : product.quantity <= 5 ? (
+                            ) : ((product.quantity ?? product.stock_quantity) || 0) <= 5 ? (
                               <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                                Only {product.quantity} left!
+                                Only {product.quantity ?? product.stock_quantity} left!
                               </span>
                             ) : (
                               <span className="text-xs text-green-600 dark:text-green-400 font-medium">

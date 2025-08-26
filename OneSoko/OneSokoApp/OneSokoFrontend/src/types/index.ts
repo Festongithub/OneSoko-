@@ -17,21 +17,39 @@ export interface UserProfile {
 }
 
 export interface Product {
-  productId: string;
+  // Primary identifiers - support both numeric and string IDs used in different components
+  productId?: string;
+  id?: number;
+
   name: string;
-  description: string;
-  price: string;
-  quantity: number;
+
+  description?: string;
+
+  // Price fields may be strings from the API or numeric helpers in the UI
+  price: string | number;
+  promotional_price?: string | number;
+  discount?: string | number;
+
+  // Quantity/stock
+  quantity?: number;
+  stock_quantity?: number;
+
+  // Image fields
   image?: string;
-  discount: string;
-  promotional_price?: string;
-  is_active: boolean;
+  image_url?: string;
+
+  is_active?: boolean;
   deleted_at?: string;
+
+  // Category can be undefined in some places; make optional to reduce narrow errors
   category?: Category;
-  tags: Tag[];
+
+  tags?: Tag[];
   variants?: ProductVariant[];
   reviews?: Review[];
   average_rating?: number;
+  created_at?: string;
+
   // Additional properties for homepage display
   originalPrice?: number;
   rating?: number;
@@ -62,7 +80,8 @@ export interface ProductVariant {
 }
 
 export interface Shop {
-  shopId: string;
+  shopId?: string;
+  id?: number;
   name: string;
   description: string;
   location: string;
@@ -75,7 +94,7 @@ export interface Shop {
   logo?: string;
   logo_url?: string;
   status: 'active' | 'suspended' | 'pending';
-  is_active: boolean;
+  is_active?: boolean;
   views: number;
   total_sales: string;
   total_orders: number;

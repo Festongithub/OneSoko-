@@ -10,6 +10,14 @@ export const formatPrice = (price: string | number): string => {
 };
 
 /**
+ * Safely convert a price-like value to number (handles string|number|undefined)
+ */
+export const toNumber = (value?: string | number): number => {
+  if (value === undefined || value === null) return 0;
+  return typeof value === 'number' ? value : parseFloat(value || '0');
+};
+
+/**
  * Format a date to a readable string
  */
 export const formatDate = (dateString: string): string => {

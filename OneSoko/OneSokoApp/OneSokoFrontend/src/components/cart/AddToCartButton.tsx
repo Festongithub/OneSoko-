@@ -25,26 +25,31 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   const [isAdded, setIsAdded] = useState(false);
   const { addItem, toggleCart } = useCartStore();
 
+  const maxQuantity = product.quantity ?? product.stock_quantity ?? 9999;
+
   const handleAddToCart = () => {
-    if (!product.is_active) {
+    if (product.is_active === false) {
       toast.error('This product is currently unavailable');
       return;
     }
 
-    if (quantity > product.quantity) {
-      toast.error(`Only ${product.quantity} items available in stock`);
+    const maxQuantity = product.quantity ?? product.stock_quantity ?? 9999;
+
+    if (quantity > maxQuantity) {
+      toast.error(`Only ${maxQuantity} items available in stock`);
       return;
     }
 
-    addItem(product, variant, quantity);
-    setIsAdded(true);
-    
-    toast.success(`${product.name} added to cart!`, {
-      icon: '🛒',
-    });
-
-    // Reset the added state after 2 seconds
-    setTimeout(() => setIsAdded(false), 2000);
+    // Add to store
+    try {
+      addItem(product, variant, quantity);
+      setIsAdded(true);
+      toast.success(`${product.name} added to cart!`, { icon: '🛒' });
+      setTimeout(() => setIsAdded(false), 2000);
+    } catch (err) {
+      console.error('Add to cart error:', err);
+      toast.error('Failed to add item to cart');
+    }
   };
 
   const handleAddAndViewCart = () => {
@@ -53,8 +58,9 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       toggleCart();
     }, 500);
   };
+    const isLowStock = (product.quantity ?? product.stock_quantity ?? 0) > 0 && (product.quantity ?? product.stock_quantity ?? 0) <= 5;
 
-  const getSizeClasses = () => {
+    const getSizeClasses = () => {
     switch (size) {
       case 'sm':
         return 'px-2 py-1.5 text-xs min-h-[32px]';
@@ -65,8 +71,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     }
   };
 
-  const isOutOfStock = product.quantity === 0;
-  const isLowStock = product.quantity > 0 && product.quantity <= 5;
+  const isOutOfStock = (product.quantity ?? product.stock_quantity ?? 0) === 0;
 
   if (isOutOfStock) {
     return (
@@ -92,7 +97,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       {/* Stock Status */}
       {isLowStock && (
         <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-          Only {product.quantity} left in stock!
+          Low stock — hurry, only a few left
         </p>
       )}
 
@@ -105,9 +110,9 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
             onChange={(e) => setQuantity(parseInt(e.target.value))}
             className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent flex-1 min-w-[50px] bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
-            {Array.from({ length: Math.min(product.quantity, 10) }, (_, i) => i + 1).map(num => (
-              <option key={num} value={num}>{num}</option>
-            ))}
+              {Array.from({ length: Math.min(maxQuantity, 10) }, (_, i) => i + 1).map(num => (
+                <option key={num} value={num}>{num}</option>
+              ))}
           </select>
         </div>
       )}

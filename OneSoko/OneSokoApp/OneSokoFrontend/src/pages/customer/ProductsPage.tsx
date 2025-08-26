@@ -11,6 +11,7 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 import AddToCartButton from '../../components/cart/AddToCartButton';
 import type { Product } from '../../types';
+import { toNumber } from '../../utils/helpers';
 
 // Mock data - replace with real API calls later
 const categories = [
@@ -217,9 +218,9 @@ const ProductCard: React.FC<{ product: Product & { badge: string; shop: string; 
   product, 
   viewMode 
 }) => {
-  const price = parseFloat(product.price);
-  const originalPrice = product.promotional_price ? parseFloat(product.promotional_price) : price;
-  const discountPercentage = product.promotional_price ? parseInt(product.discount) : 0;
+  const price = toNumber(product.price);
+  const originalPrice = product.promotional_price ? toNumber(product.promotional_price) : price;
+  const discountPercentage = product.promotional_price ? parseInt(String(product.discount || '0')) : 0;
 
   if (viewMode === 'list') {
     return (

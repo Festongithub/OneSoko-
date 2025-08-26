@@ -204,10 +204,12 @@ const features = [
   }
 ];
 
+import { toNumber } from '../../utils/helpers';
+
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
-  const originalPrice = product.originalPrice || parseFloat(product.price);
-  const currentPrice = parseFloat(product.promotional_price || product.price);
-  const discountPercentage = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+  const originalPrice = product.originalPrice || toNumber(product.price);
+  const currentPrice = toNumber(product.promotional_price ?? product.price);
+  const discountPercentage = Math.round(((originalPrice - currentPrice) / (originalPrice || 1)) * 100);
 
   return (
     <div className="card group cursor-pointer shadow-hover overflow-hidden">

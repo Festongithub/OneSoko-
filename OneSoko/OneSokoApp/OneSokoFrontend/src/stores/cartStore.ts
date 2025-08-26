@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Product, ProductVariant } from '../types';
+import { toNumber } from '../utils/helpers';
 
 interface CartState {
   items: CartItem[];
@@ -84,13 +85,13 @@ export const useCartStore = create<CartState>()(
       getTotalPrice: () => {
         return get().items.reduce((total, item) => {
           // Use promotional price if available, otherwise use regular price
-          let basePrice = item.product.promotional_price 
-            ? parseFloat(item.product.promotional_price)
-            : parseFloat(item.product.price);
-          
+          let basePrice = item.product.promotional_price
+            ? toNumber(item.product.promotional_price)
+            : toNumber(item.product.price);
+
           // Add variant price adjustment if available
           if (item.variant?.price_adjustment) {
-            basePrice += parseFloat(item.variant.price_adjustment);
+            basePrice += toNumber(item.variant.price_adjustment);
           }
           
           return total + (basePrice * item.quantity);

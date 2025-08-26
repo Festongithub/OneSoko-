@@ -287,11 +287,11 @@ const CartPage: React.FC = () => {
               
               <div className="divide-y divide-secondary-200 dark:divide-secondary-700">
                 {items.map((item) => {
-                  const price = item.product.promotional_price 
-                    ? parseFloat(item.product.promotional_price)
-                    : parseFloat(item.product.price);
-                  const variantAdjustment = item.variant?.price_adjustment 
-                    ? parseFloat(item.variant.price_adjustment) 
+                  const price = item.product.promotional_price
+                    ? Number(item.product.promotional_price)
+                    : Number(item.product.price);
+                  const variantAdjustment = item.variant?.price_adjustment
+                    ? Number(item.variant.price_adjustment)
                     : 0;
                   const finalPrice = price + variantAdjustment;
                   const itemTotal = finalPrice * item.quantity;

@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useCartStore } from '../../stores/cartStore';
 import type { CartItem } from '../../types';
+import { toNumber } from '../../utils/helpers';
 
 const CartSidebar: React.FC = () => {
   const { 
@@ -32,12 +33,12 @@ const CartSidebar: React.FC = () => {
   };
 
   const getItemPrice = (item: CartItem): number => {
-    let basePrice = item.product.promotional_price 
-      ? parseFloat(item.product.promotional_price)
-      : parseFloat(item.product.price);
-    
+    let basePrice = item.product.promotional_price
+      ? toNumber(item.product.promotional_price)
+      : toNumber(item.product.price);
+
     if (item.variant?.price_adjustment) {
-      basePrice += parseFloat(item.variant.price_adjustment);
+      basePrice += toNumber(item.variant.price_adjustment);
     }
     
     return basePrice;
@@ -118,13 +119,13 @@ const CartSidebar: React.FC = () => {
                       <div className="flex items-center mt-2 space-x-2">
                         {item.product.promotional_price && (
                           <span className="text-sm line-through text-gray-400">
-                            {formatPrice(parseFloat(item.product.price))}
+              {formatPrice(toNumber(item.product.price))}
                           </span>
                         )}
                         <span className="text-sm font-medium text-primary-600">
                           {formatPrice(getItemPrice(item))}
                         </span>
-                        {item.product.discount && parseFloat(item.product.discount) > 0 && (
+            {item.product.discount && toNumber(item.product.discount) > 0 && (
                           <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                             -{item.product.discount}%
                           </span>
@@ -147,7 +148,7 @@ const CartSidebar: React.FC = () => {
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="p-1 text-gray-400 hover:text-gray-600"
-                            disabled={item.quantity >= item.product.quantity}
+                            disabled={item.quantity >= (item.product.quantity ?? item.product.stock_quantity ?? 9999)}
                           >
                             <PlusIcon className="w-4 h-4" />
                           </button>

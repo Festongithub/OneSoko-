@@ -63,8 +63,8 @@ export const shopApi = {
     await api.delete(`/shops/${id}/`);
   },
 
-  getProducts: async (shopId: string): Promise<Product[]> => {
-    const response = await api.get(`/shops/${shopId}/products/`);
+  getProducts: async (shopId: string | number): Promise<Product[]> => {
+    const response = await api.get(`/shops/${String(shopId)}/products/`);
     return response.data;
   },
 

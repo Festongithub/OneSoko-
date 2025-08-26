@@ -38,8 +38,13 @@ const ShopProducts: React.FC = () => {
         
         // Get products from the shop
         if (shopData) {
-          const shopProducts = await shopApi.getProducts(shopData.id);
-          setProducts(shopProducts);
+          const shopId = shopData.id ?? shopData.shopId;
+          if (shopId) {
+            const shopProducts = await shopApi.getProducts(shopId);
+            setProducts(shopProducts);
+          } else {
+            setProducts([]);
+          }
         }
         
       } catch (error) {
@@ -76,9 +81,9 @@ const ShopProducts: React.FC = () => {
   };
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === '' || product.category.id.toString() === selectedCategory;
+  const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             (product.description ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+  const matchesCategory = selectedCategory === '' || (product.category?.id?.toString() === selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -91,16 +96,16 @@ const ShopProducts: React.FC = () => {
         bValue = b.name.toLowerCase();
         break;
       case 'price':
-        aValue = parseFloat(a.price);
-        bValue = parseFloat(b.price);
+  aValue = typeof a.price === 'number' ? a.price : parseFloat(String(a.price || '0'));
+  bValue = typeof b.price === 'number' ? b.price : parseFloat(String(b.price || '0'));
         break;
       case 'stock':
         aValue = a.stock_quantity;
         bValue = b.stock_quantity;
         break;
       case 'created_at':
-        aValue = new Date(a.created_at);
-        bValue = new Date(b.created_at);
+  aValue = new Date(a.created_at ?? 0);
+  bValue = new Date(b.created_at ?? 0);
         break;
       default:
         return 0;
@@ -234,15 +239,15 @@ const ShopProducts: React.FC = () => {
                       <span className="text-lg font-bold text-primary-600">
                         ${product.price}
                       </span>
-                      <span className={`badge ${
-                        product.stock_quantity > 10 ? 'badge-success' : 
-                        product.stock_quantity > 0 ? 'badge-warning' : 'badge-danger'
+                        <span className={`badge ${
+                        (product.stock_quantity ?? product.quantity ?? 0) > 10 ? 'badge-success' : 
+                        (product.stock_quantity ?? product.quantity ?? 0) > 0 ? 'badge-warning' : 'badge-danger'
                       }`}>
-                        {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : 'Out of stock'}
+                        {(product.stock_quantity ?? product.quantity ?? 0) > 0 ? `${product.stock_quantity ?? product.quantity} in stock` : 'Out of stock'}
                       </span>
                     </div>
                     <div className="text-xs text-secondary-500 mb-4">
-                      Category: {product.category.name}
+                      Category: {product.category?.name ?? 'Uncategorized'}
                     </div>
                   </div>
 
@@ -264,7 +269,7 @@ const ShopProducts: React.FC = () => {
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={() => product.id && handleDeleteProduct(product.id)}
                       className="flex-1 btn-danger text-xs py-2"
                     >
                       <TrashIcon className="h-3 w-3 mr-1" />

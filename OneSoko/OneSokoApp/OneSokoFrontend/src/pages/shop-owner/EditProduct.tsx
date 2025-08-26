@@ -50,12 +50,12 @@ const EditProduct: React.FC = () => {
           setProduct(productData);
           
           setFormData({
-            name: productData.name,
-            description: productData.description,
-            price: productData.price,
-            stock_quantity: productData.stock_quantity.toString(),
-            category_id: productData.category.id.toString(),
-            tags: productData.tags.map(tag => tag.name),
+              name: productData.name ?? '',
+              description: productData.description ?? '',
+              price: String(productData.price ?? ''),
+              stock_quantity: String(productData.stock_quantity ?? 0),
+              category_id: productData.category?.id?.toString() ?? '',
+              tags: (productData.tags ?? []).map(tag => tag.name),
             image_url: productData.image_url || '',
             variants: productData.variants.map(variant => ({
               id: variant.id,
