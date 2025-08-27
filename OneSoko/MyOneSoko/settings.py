@@ -293,3 +293,14 @@ SERVER_EMAIL = 'server@onesoko.co.ke'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'your-email-password'
+
+# Heroku deployment settings
+import django_heroku
+django_heroku.settings(locals())
+
+# Whitenoise for static files
+MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    *MIDDLEWARE
+]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

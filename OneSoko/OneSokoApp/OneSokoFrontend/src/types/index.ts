@@ -49,7 +49,9 @@ export interface Product {
   description: string;
   price: string;
   quantity: number;
+  stock_quantity?: number;
   image?: string;
+  image_url?: string;
   discount: string;
   promotional_price?: string;
   is_active: boolean;
@@ -100,6 +102,7 @@ export interface ProductVariant {
 
 export interface Shop {
   shopId: string;
+  id?: string;
   name: string;
   description: string;
   location: string;
