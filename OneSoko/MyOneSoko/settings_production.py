@@ -211,6 +211,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+#############################
+# CORS settings for production
+#############################
+CORS_ALLOWED_ORIGINS = [
+    'https://onesoko-frontend-cl53jl8ge-kembois-projects-d0af5bac.vercel.app',
+]
+
 # Middleware for production
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

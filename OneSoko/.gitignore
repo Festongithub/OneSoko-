@@ -1,5 +1,4 @@
 #!/bin/bash
 env
-*.pyc
-.vscode
-__pycache__ 
+.vscode 
+__pycache__
