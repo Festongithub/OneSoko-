@@ -1,9 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, WishlistViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet, ShopownerRegistrationViewSet, ShopOwnerInfoViewSet,
-    ShopReviewViewSet, ShopReviewResponseViewSet, ShopRatingSummaryViewSet, ReviewHelpfulVoteViewSet, ShopWithReviewsViewSet
+    ProductViewSet, ShopViewSet, CategoryViewSet, TagViewSet, ReviewViewSet, ProductVariantViewSet, UserProfileViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet, MessageViewSet, NotificationViewSet, UserRegistrationViewSet, ShopownerRegistrationViewSet, ShopOwnerInfoViewSet,
+    ShopReviewViewSet, ShopReviewResponseViewSet, ShopRatingSummaryViewSet, ReviewHelpfulVoteViewSet, ShopWithReviewsViewSet,
+    EmailSubscriptionCreateView, EmailSubscriptionConfirmView, EmailSubscriptionUnsubscribeView, EmailSubscriptionStatusView
 )
+from .wishlist_views import WishlistViewSet
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -29,6 +31,31 @@ from .analytics_views import (
     AnalyticsViewSet,
     generate_sales_forecast,
 )
+from .loyalty_views import (
+    LoyaltyProgramViewSet,
+    CustomerLoyaltyViewSet,
+    process_order_loyalty_points,
+    referral_info,
+)
+from .profile_views import (
+    user_profile_detail,
+    public_profile_detail,
+    follow_user,
+    unfollow_user,
+    user_followers,
+    user_following,
+    UserPostViewSet,
+    user_feed,
+    user_posts,
+    profile_stats,
+    search_users,
+)
+from .health_views import (
+    health_check,
+    health_check_detailed,
+    readiness_check,
+    liveness_check,
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -42,9 +69,11 @@ router.register(r'userprofiles', UserProfileViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'enhanced-orders', EnhancedOrderViewSet, basename='enhanced-orders')  # Enhanced order management
 router.register(r'analytics', AnalyticsViewSet, basename='analytics')  # Business analytics
+router.register(r'loyalty-programs', LoyaltyProgramViewSet, basename='loyalty-programs')  # Loyalty program management
+router.register(r'customer-loyalty', CustomerLoyaltyViewSet, basename='customer-loyalty')  # Customer loyalty accounts
 router.register(r'orderitems', OrderItemViewSet)
 router.register(r'payments', PaymentViewSet)
-router.register(r'wishlists', WishlistViewSet)
+router.register(r'wishlists', WishlistViewSet, basename='wishlist')
 router.register(r'messages', MessageViewSet)
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'users', UserRegistrationViewSet, basename='user-registration')
@@ -58,39 +87,70 @@ router.register(r'shop-rating-summaries', ShopRatingSummaryViewSet, basename='sh
 router.register(r'review-helpful-votes', ReviewHelpfulVoteViewSet, basename='review-helpful-votes')
 router.register(r'shops-with-reviews', ShopWithReviewsViewSet, basename='shops-with-reviews')
 
+# Profile and Social Features
+router.register(r'posts', UserPostViewSet, basename='posts')  # User posts/tweets
+
 # The API URLs are now determined automatically by the router
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),  # Remove 'api/' prefix since it's added in main urls.py
 ]
 
 # Authentication URLs
 urlpatterns += [
     # JWT Token endpoints
-    path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='auth_login'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='auth_login'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     # Registration endpoints
-    path('api/auth/register/', register_user, name='register_user'),
-    path('api/auth/register/shop-owner/', register_shop_owner, name='register_shop_owner'),
+    path('auth/register/', register_user, name='register_user'),
+    path('auth/register/shop-owner/', register_shop_owner, name='register_shop_owner'),
     
     # OAuth endpoints
-    path('api/auth/oauth/', oauth_login, name='oauth_login'),
+    path('auth/oauth/', oauth_login, name='oauth_login'),
     
     # Profile endpoint
-    path('api/auth/profile/', user_profile, name='user_profile'),
+    path('auth/profile/', user_profile, name='user_profile'),
     
     # Notification endpoints
-    path('api/notifications/', get_notifications, name='get_notifications'),
-    path('api/notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
-    path('api/notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
-    path('api/notifications/summary/', notification_summary, name='notification_summary'),
-    path('api/notifications/clear-read/', clear_read_notifications, name='clear_read_notifications'),
-    path('api/notifications/create-test/', create_test_notifications, name='create_test_notifications'),
+    path('notifications/', get_notifications, name='get_notifications'),
+    path('notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/summary/', notification_summary, name='notification_summary'),
+    path('notifications/clear-read/', clear_read_notifications, name='clear_read_notifications'),
+    path('notifications/create-test/', create_test_notifications, name='create_test_notifications'),
     
     # Enhanced Order Management endpoints
-    path('api/orders/create-from-cart/', create_order_from_cart, name='create_order_from_cart'),
-    path('api/orders/reports/', order_reports, name='order_reports'),
+    path('orders/create-from-cart/', create_order_from_cart, name='create_order_from_cart'),
+    path('orders/reports/', order_reports, name='order_reports'),
     
     # Advanced Analytics endpoints
-    path('api/analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
+    path('analytics/forecast/', generate_sales_forecast, name='generate_sales_forecast'),
+    
+    # Customer Loyalty & Rewards endpoints
+    path('loyalty/process-order-points/', process_order_loyalty_points, name='process_order_loyalty_points'),
+    path('loyalty/referral-info/', referral_info, name='referral_info'),
+    
+    # Email Subscription endpoints
+    path('email-subscription/subscribe/', EmailSubscriptionCreateView.as_view(), name='email-subscription-create'),
+    path('email-subscription/confirm/', EmailSubscriptionConfirmView.as_view(), name='email-subscription-confirm'),
+    path('email-subscription/unsubscribe/', EmailSubscriptionUnsubscribeView.as_view(), name='email-subscription-unsubscribe'),
+    path('email-subscription/status/', EmailSubscriptionStatusView.as_view(), name='email-subscription-status'),
+    
+    # Profile and Social Media endpoints
+    path('profile/', user_profile_detail, name='user-profile-detail'),
+    path('profile/<str:username>/', public_profile_detail, name='public-profile-detail'),
+    path('profile/<str:username>/follow/', follow_user, name='follow-user'),
+    path('profile/<str:username>/unfollow/', unfollow_user, name='unfollow-user'),
+    path('profile/<str:username>/followers/', user_followers, name='user-followers'),
+    path('profile/<str:username>/following/', user_following, name='user-following'),
+    path('profile/<str:username>/posts/', user_posts, name='user-posts'),
+    path('profile/<str:username>/stats/', profile_stats, name='profile-stats'),
+    path('feed/', user_feed, name='user-feed'),
+    path('search/users/', search_users, name='search-users'),
+    
+    # Health check endpoints
+    path('health/', health_check, name='health-check'),
+    path('health/detailed/', health_check_detailed, name='health-check-detailed'),
+    path('health/ready/', readiness_check, name='readiness-check'),
+    path('health/live/', liveness_check, name='liveness-check'),
 ] 

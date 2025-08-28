@@ -62,7 +62,7 @@ const OrderManagementPage: React.FC = () => {
   const [bulkAction, setBulkAction] = useState('');
   const [showAnalytics, setShowAnalytics] = useState(false);
   
-  const { user, token } = useAuthStore();
+  const { accessToken } = useAuthStore();
   const navigate = useNavigate();
   
   const ordersPerPage = 10;
@@ -82,7 +82,7 @@ const OrderManagementPage: React.FC = () => {
 
       const response = await fetch(`/api/enhanced-orders/?${params}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -102,7 +102,7 @@ const OrderManagementPage: React.FC = () => {
     try {
       const response = await fetch('/api/enhanced-orders/analytics/', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -116,30 +116,6 @@ const OrderManagementPage: React.FC = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, newStatus: string, trackingInfo?: string) => {
-    try {
-      const response = await fetch(`/api/enhanced-orders/${orderId}/update_status/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          tracking_info: trackingInfo || '',
-        }),
-      });
-
-      if (response.ok) {
-        fetchOrders(); // Refresh orders
-        showToast('Order status updated successfully', 'success');
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      showToast('Failed to update order status', 'error');
-    }
-  };
-
   const handleBulkAction = async () => {
     if (!bulkAction || selectedOrders.length === 0) return;
 
@@ -147,7 +123,7 @@ const OrderManagementPage: React.FC = () => {
       const response = await fetch('/api/enhanced-orders/bulk_update_status/', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -172,7 +148,7 @@ const OrderManagementPage: React.FC = () => {
     try {
       const response = await fetch('/api/orders/reports/?type=export', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
 

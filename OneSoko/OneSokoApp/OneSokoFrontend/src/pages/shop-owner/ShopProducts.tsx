@@ -11,31 +11,32 @@ import {
 import type { Product, Category } from '../../types';
 import { productApi, categoryApi } from '../../services/productApi';
 import { shopApi } from '../../services/shopApi';
+import { useShopSession } from '../../hooks/useShopSession';
 import toast from 'react-hot-toast';
 
 const ShopProducts: React.FC = () => {
+  const { userShop, isLoadingShop } = useShopSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'created_at'>('created_at');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'quantity'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
+      if (isLoadingShop) return;
+      
       setIsLoading(true);
       
       try {
-        // Fetch categories and shop products from API
-        const [categoriesData, shopData] = await Promise.all([
-          categoryApi.getAll(),
-          shopApi.getMyShop()
-        ]);
-        
+        // Fetch categories
+        const categoriesData = await categoryApi.getAll();
         setCategories(categoriesData);
         
+<<<<<<< HEAD
         // Get products from the shop
         if (shopData) {
           const shopId = shopData.id ?? shopData.shopId;
@@ -45,6 +46,14 @@ const ShopProducts: React.FC = () => {
           } else {
             setProducts([]);
           }
+=======
+        // Get products from the user's shop
+        if (userShop) {
+          const shopProducts = await shopApi.getProducts(userShop.shopId);
+          setProducts(shopProducts);
+        } else {
+          setProducts([]);
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
         }
         
       } catch (error) {
@@ -64,14 +73,14 @@ const ShopProducts: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [userShop, isLoadingShop]);
 
-  const handleDeleteProduct = async (productId: number) => {
+  const handleDeleteProduct = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
       try {
         // Delete product via API
         await productApi.delete(productId);
-        setProducts(prev => prev.filter(p => p.id !== productId));
+        setProducts(prev => prev.filter(p => p.productId !== productId));
         toast.success('Product deleted successfully');
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -99,6 +108,7 @@ const ShopProducts: React.FC = () => {
   aValue = typeof a.price === 'number' ? a.price : parseFloat(String(a.price || '0'));
   bValue = typeof b.price === 'number' ? b.price : parseFloat(String(b.price || '0'));
         break;
+<<<<<<< HEAD
       case 'stock':
         aValue = a.stock_quantity;
         bValue = b.stock_quantity;
@@ -106,6 +116,11 @@ const ShopProducts: React.FC = () => {
       case 'created_at':
   aValue = new Date(a.created_at ?? 0);
   bValue = new Date(b.created_at ?? 0);
+=======
+      case 'quantity':
+        aValue = a.quantity;
+        bValue = b.quantity;
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
         break;
       default:
         return 0;
@@ -187,14 +202,12 @@ const ShopProducts: React.FC = () => {
               }}
               className="input"
             >
-              <option value="created_at-desc">Newest First</option>
-              <option value="created_at-asc">Oldest First</option>
               <option value="name-asc">Name A-Z</option>
               <option value="name-desc">Name Z-A</option>
               <option value="price-asc">Price Low-High</option>
               <option value="price-desc">Price High-Low</option>
-              <option value="stock-asc">Stock Low-High</option>
-              <option value="stock-desc">Stock High-Low</option>
+              <option value="quantity-asc">Stock Low-High</option>
+              <option value="quantity-desc">Stock High-Low</option>
             </select>
           </div>
         </div>
@@ -208,13 +221,13 @@ const ShopProducts: React.FC = () => {
         ) : sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedProducts.map((product) => (
-              <div key={product.id} className="card">
+              <div key={product.productId} className="card">
                 <div className="card-body">
                   {/* Product Image */}
                   <div className="w-full h-48 bg-secondary-200 rounded-lg mb-4 flex items-center justify-center">
-                    {product.image_url ? (
+                    {product.image ? (
                       <img
-                        src={product.image_url}
+                        src={product.image}
                         alt={product.name}
                         className="w-full h-full object-cover rounded-lg"
                       />
@@ -239,11 +252,19 @@ const ShopProducts: React.FC = () => {
                       <span className="text-lg font-bold text-primary-600">
                         ${product.price}
                       </span>
+<<<<<<< HEAD
                         <span className={`badge ${
                         (product.stock_quantity ?? product.quantity ?? 0) > 10 ? 'badge-success' : 
                         (product.stock_quantity ?? product.quantity ?? 0) > 0 ? 'badge-warning' : 'badge-danger'
                       }`}>
                         {(product.stock_quantity ?? product.quantity ?? 0) > 0 ? `${product.stock_quantity ?? product.quantity} in stock` : 'Out of stock'}
+=======
+                      <span className={`badge ${
+                        product.quantity > 10 ? 'badge-success' : 
+                        product.quantity > 0 ? 'badge-warning' : 'badge-danger'
+                      }`}>
+                        {product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
                       </span>
                     </div>
                     <div className="text-xs text-secondary-500 mb-4">
@@ -254,7 +275,7 @@ const ShopProducts: React.FC = () => {
                   {/* Actions */}
                   <div className="flex items-center space-x-2">
                     <Link
-                      to={`/products/${product.id}`}
+                      to={`/products/${product.productId}`}
                       target="_blank"
                       className="flex-1 btn-outline-secondary text-xs py-2"
                     >
@@ -262,14 +283,18 @@ const ShopProducts: React.FC = () => {
                       View
                     </Link>
                     <Link
-                      to={`/shop/products/${product.id}/edit`}
+                      to={`/shop/products/${product.productId}/edit`}
                       className="flex-1 btn-secondary text-xs py-2"
                     >
                       <PencilIcon className="h-3 w-3 mr-1" />
                       Edit
                     </Link>
                     <button
+<<<<<<< HEAD
                       onClick={() => product.id && handleDeleteProduct(product.id)}
+=======
+                      onClick={() => handleDeleteProduct(product.productId)}
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
                       className="flex-1 btn-danger text-xs py-2"
                     >
                       <TrashIcon className="h-3 w-3 mr-1" />

@@ -122,35 +122,7 @@ const ReviewsTestPage: React.FC = () => {
           </div>
         )}
 
-        {/* Feature Information */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mt-8 shadow">
-          <h3 className="text-lg font-semibold mb-4">Review System Features</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-green-600 mb-2">✅ Completed Features</h4>
-              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                <li>• 1-5 star rating system</li>
-                <li>• Customer review submission</li>
-                <li>• Shop owner responses</li>
-                <li>• Rating summaries & breakdowns</li>
-                <li>• Helpful/Not helpful voting</li>
-                <li>• Verified purchase badges</li>
-                <li>• Review moderation system</li>
-                <li>• Real-time rating calculations</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-blue-600 mb-2">🚀 API Endpoints Available</h4>
-              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                <li>• <code>/api/shop-reviews/</code> - CRUD operations</li>
-                <li>• <code>/api/shop-review-responses/</code> - Owner responses</li>
-                <li>• <code>/api/shop-rating-summaries/</code> - Rating data</li>
-                <li>• <code>/api/review-helpful-votes/</code> - Vote management</li>
-                <li>• <code>/api/shops-with-reviews/</code> - Enhanced shop data</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

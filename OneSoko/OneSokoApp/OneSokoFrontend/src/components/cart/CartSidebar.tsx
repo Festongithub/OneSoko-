@@ -54,7 +54,7 @@ const CartSidebar: React.FC = () => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        className="fixed inset-0 bg-black/5 z-50"
         onClick={toggleCart}
       />
       

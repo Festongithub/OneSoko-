@@ -4,14 +4,41 @@ export interface User {
   email: string;
   first_name?: string;
   last_name?: string;
+  date_joined?: string;
+  profile?: UserProfile;
 }
 
 export interface UserProfile {
   id: number;
   user: User;
+  bio?: string;
+  avatar_url?: string;
+  cover_photo_url?: string;
   phone_number?: string;
   address?: string;
+  website?: string;
+  date_of_birth?: string;
+  location?: string;
   is_shopowner: boolean;
+  is_public: boolean;
+  is_email_verified: boolean;
+  twitter_url?: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  linkedin_url?: string;
+  followers_count: number;
+  following_count: number;
+  is_verified: boolean;
+  verification_type?: string;
+  verification_badge: {
+    is_verified: boolean;
+    type?: string;
+    color?: string;
+  };
+  full_name: string;
+  display_name: string;
+  profile_completion_percentage: number;
+  is_following?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +49,7 @@ export interface Product {
   id?: number;
 
   name: string;
+<<<<<<< HEAD
 
   description?: string;
 
@@ -39,6 +67,17 @@ export interface Product {
   image_url?: string;
 
   is_active?: boolean;
+=======
+  description: string;
+  price: string;
+  quantity: number;
+  stock_quantity?: number;
+  image?: string;
+  image_url?: string;
+  discount: string;
+  promotional_price?: string;
+  is_active: boolean;
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
   deleted_at?: string;
 
   // Category can be undefined in some places; make optional to reduce narrow errors
@@ -48,13 +87,26 @@ export interface Product {
   variants?: ProductVariant[];
   reviews?: Review[];
   average_rating?: number;
+<<<<<<< HEAD
   created_at?: string;
 
+=======
+  shops?: ShopBasicInfo[];
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
   // Additional properties for homepage display
   originalPrice?: number;
   rating?: number;
   badge?: string;
   shop?: string;
+}
+
+export interface ShopBasicInfo {
+  shopId: string;
+  name: string;
+  location: string;
+  city: string;
+  country: string;
+  logo_url?: string;
 }
 
 export interface Category {
@@ -80,8 +132,13 @@ export interface ProductVariant {
 }
 
 export interface Shop {
+<<<<<<< HEAD
   shopId?: string;
   id?: number;
+=======
+  shopId: string;
+  id?: string;
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
   name: string;
   description: string;
   location: string;

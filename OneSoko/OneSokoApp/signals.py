@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import Shop, Order, Review, Notification, OrderItem
+from .models import Shop, Order, Review, Notification, OrderItem, ShopReview, ShopRatingSummary, ShopReviewResponse
 
 
 @receiver(post_save, sender=Shop)
@@ -12,7 +12,7 @@ def create_shop_notification(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(
             user=instance.shopowner,
-            message=f"🎉 Congratulations! Your shop '{instance.name}' has been successfully created and is now live.",
+            text=f"🎉 Congratulations! Your shop '{instance.name}' has been successfully created and is now live.",
             type='shop_created',
             priority='high',
             shop=instance
@@ -28,7 +28,7 @@ def create_order_notification(sender, instance, created, **kwargs):
         # Create notification for the shop owner
         Notification.objects.create(
             user=instance.shop.shopowner,
-            message=f"📦 New order #{instance.id} received from {instance.user.get_full_name() or instance.user.username} for ${instance.total}",
+            text=f"📦 New order #{instance.id} received from {instance.user.get_full_name() or instance.user.username} for ${instance.total}",
             type='new_order',
             priority='high',
             shop=instance.shop,
@@ -56,12 +56,12 @@ def create_order_status_notification(sender, instance, created, **kwargs):
             'cancelled': 'high'
         }
         
-        if instance.status in status_messages:
+        if message := status_messages.get(instance.status):
             Notification.objects.create(
                 user=instance.shop.shopowner,
-                message=status_messages[instance.status],
+                text=status_messages[instance.status],
                 type='order_status_update',
-                priority=priority_map.get(instance.status, 'medium'),
+                priority='medium',
                 shop=instance.shop,
                 order=instance
             )
@@ -83,7 +83,7 @@ def create_review_notification(sender, instance, created, **kwargs):
             rating_emoji = "⭐" * instance.rating
             Notification.objects.create(
                 user=shop.shopowner,
-                message=f"📝 New {instance.rating}-star review for '{instance.product.name}' from {instance.user.get_full_name() or instance.user.username}: {rating_emoji}",
+                text=f"📝 New {instance.rating}-star review for '{instance.product.name}' from {instance.user.get_full_name() or instance.user.username}: {rating_emoji}",
                 type='new_review',
                 priority=priority,
                 shop=shop,
@@ -115,7 +115,7 @@ def create_low_stock_notification(sender, instance, created, **kwargs):
                 if not existing_notification:
                     Notification.objects.create(
                         user=shop.shopowner,
-                        message=f"⚠️ Low stock alert: '{product.name}' has only {product.quantity} items left",
+                        text=f"⚠️ Low stock alert: '{product.name}' has only {product.quantity} items left",
                         type='low_stock',
                         priority='high',
                         shop=shop,
@@ -138,7 +138,7 @@ def create_low_stock_notification(sender, instance, created, **kwargs):
                 if not existing_notification:
                     Notification.objects.create(
                         user=shop.shopowner,
-                        message=f"🚫 Out of stock: '{product.name}' is now out of stock",
+                        text=f"🚫 Out of stock: '{product.name}' is now out of stock",
                         type='out_of_stock',
                         priority='urgent',
                         shop=shop,
@@ -175,8 +175,49 @@ def create_milestone_notifications(sender, instance, created, **kwargs):
             
             Notification.objects.create(
                 user=shop.shopowner,
-                message=milestone_messages[total_orders],
+                text=milestone_messages[total_orders],
                 type='milestone',
                 priority='medium',
                 shop=shop
             )
+
+
+@receiver(post_save, sender=ShopReview)
+def update_shop_rating_summary_on_review_save(sender, instance, created, **kwargs):
+    """
+    Update shop rating summary when a review is created or updated.
+    """
+    try:
+        summary, created = ShopRatingSummary.objects.get_or_create(shop=instance.shop)
+        summary.update_rating_summary()
+    except Exception as e:
+        print(f"Error updating rating summary: {e}")
+
+
+@receiver(pre_delete, sender=ShopReview)
+def update_shop_rating_summary_on_review_delete(sender, instance, **kwargs):
+    """
+    Update shop rating summary when a review is deleted.
+    """
+    try:
+        summary = ShopRatingSummary.objects.get(shop=instance.shop)
+        summary.update_rating_summary()
+    except ShopRatingSummary.DoesNotExist:
+        pass
+    except Exception as e:
+        print(f"Error updating rating summary: {e}")
+
+
+@receiver(post_save, sender=ShopReviewResponse)
+def create_review_response_notification(sender, instance, created, **kwargs):
+    """
+    Create a notification when a shop owner responds to a review.
+    """
+    if created:
+        Notification.objects.create(
+            user=instance.review.customer,
+            text=f"🗨️ {instance.review.shop.name} has responded to your review",
+            type='review_response',
+            priority='medium',
+            shop=instance.review.shop
+        )

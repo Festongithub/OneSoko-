@@ -249,16 +249,185 @@ class UserProfile(models.Model):
     # Link to the built-in User model
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     # Short biography/about section
-    bio = models.TextField(blank=True)
+    bio = models.TextField(blank=True, max_length=500)
     # Avatar/profile picture
     avatar = models.ImageField(upload_to='users/avatars/', blank=True, null=True)
+    # Cover photo for profile (like X header image) - NEW
+    cover_photo = models.ImageField(upload_to='users/covers/', blank=True, null=True)
     # Address (can be expanded to structured fields)
     address = models.CharField(max_length=255, blank=True)
+    # Phone number - EXISTING
+    phone_number = models.CharField(max_length=20, blank=True)
+    # Website URL - NEW
+    website = models.URLField(blank=True)
+    # Date of birth - EXISTING
+    date_of_birth = models.DateField(null=True, blank=True)
+    # Location/City - NEW (different from existing city field)
+    location = models.CharField(max_length=100, blank=True)
     # Is this user a shopowner?
     is_shopowner = models.BooleanField(default=False)
+    # Profile visibility settings - NEW
+    is_public = models.BooleanField(default=True)
+    # Email verification status - NEW
+    is_email_verified = models.BooleanField(default=False)
+    # Social media links - NEW
+    twitter_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    # Profile stats (computed fields) - NEW
+    followers_count = models.IntegerField(default=0)
+    following_count = models.IntegerField(default=0)
+    # Verification badge (like X blue checkmark) - NEW
+    is_verified = models.BooleanField(default=False)
+    verification_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('none', 'None'),
+            ('email', 'Email Verified'),
+            ('phone', 'Phone Verified'),
+            ('business', 'Business Verified'),
+            ('premium', 'Premium Member'),
+        ],
+        default='none'
+    )
+
+    class Meta:
+        db_table = 'OneSokoApp_userprofile'  # Keep existing table name
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
 
     def __str__(self):
+        return f"{self.user.username} - {self.user.first_name} {self.user.last_name}"
+
+    @property
+    def full_name(self):
+        """Get the user's full name"""
+        if self.user.first_name and self.user.last_name:
+            return f"{self.user.first_name} {self.user.last_name}"
         return self.user.username
+
+    @property
+    def display_name(self):
+        """Get the display name for the profile"""
+        if self.user.first_name:
+            return self.user.first_name
+        return self.user.username
+
+    @property
+    def avatar_url(self):
+        """Get the avatar URL or return a default"""
+        if self.avatar:
+            return self.avatar.url
+        return None
+
+    @property
+    def cover_photo_url(self):
+        """Get the cover photo URL or return None"""
+        if self.cover_photo:
+            return self.cover_photo.url
+        return None
+
+    @property
+    def profile_completion_percentage(self):
+        """Calculate profile completion percentage"""
+        fields_to_check = [
+            self.bio, self.avatar, self.phone_number, 
+            self.location, self.date_of_birth
+        ]
+        completed_fields = sum(1 for field in fields_to_check if field)
+        return int((completed_fields / len(fields_to_check)) * 100)
+
+    def get_verification_badge(self):
+        """Get verification badge information"""
+        if self.is_verified:
+            return {
+                'is_verified': True,
+                'type': self.verification_type,
+                'color': 'blue' if self.verification_type == 'premium' else 'green'
+            }
+        return {'is_verified': False}
+
+# Follow/Following model for social connections (like X)
+class UserFollow(models.Model):
+    # User who is following
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    # User being followed
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    # When the follow relationship was created
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Notification settings for this follow
+    notifications_enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'user_follow'
+        unique_together = ('follower', 'following')
+        verbose_name = 'User Follow'
+        verbose_name_plural = 'User Follows'
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+# User Posts/Activity model (like X tweets)
+class UserPost(models.Model):
+    # User who created the post
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    # Post content
+    content = models.TextField(max_length=280)  # X-like character limit
+    # Optional image
+    image = models.ImageField(upload_to='posts/images/', blank=True, null=True)
+    # Post type
+    POST_TYPES = [
+        ('post', 'Regular Post'),
+        ('shop_update', 'Shop Update'),
+        ('product_feature', 'Product Feature'),
+        ('review', 'Review'),
+    ]
+    post_type = models.CharField(max_length=20, choices=POST_TYPES, default='post')
+    # Engagement metrics
+    likes_count = models.IntegerField(default=0)
+    reposts_count = models.IntegerField(default=0)
+    replies_count = models.IntegerField(default=0)
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    # Referenced product (if applicable)
+    related_product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    # Referenced shop (if applicable)
+    related_shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'user_post'
+        ordering = ['-created_at']
+        verbose_name = 'User Post'
+        verbose_name_plural = 'User Posts'
+
+    def __str__(self):
+        return f"{self.user.username}: {self.content[:50]}..."
+
+# Post Likes model
+class PostLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(UserPost, on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'post_like'
+        unique_together = ('user', 'post')
+
+# Post Replies model (like X replies)
+class PostReply(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(UserPost, on_delete=models.CASCADE, related_name='replies')
+    content = models.TextField(max_length=280)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'post_reply'
+        ordering = ['created_at']
 
 # Order model for customer purchases
 class Order(models.Model):
@@ -336,10 +505,42 @@ class Wishlist(models.Model):
     # User who owns the wishlist
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlists')
     # Products favorited by the user
-    products = models.ManyToManyField(Product, related_name='wishlisted_by')
-
+    products = models.ManyToManyField(Product, related_name='wishlisted_by', through='WishlistItem')
+    # Timestamps
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Ensure one wishlist per user
+        unique_together = ['user']
+    
     def __str__(self):
         return f"{self.user.username}'s Wishlist"
+    
+    @property
+    def total_items(self):
+        return self.products.count()
+    
+    @property
+    def total_value(self):
+        return sum(float(product.price) for product in self.products.all() if product.price)
+    
+    @property
+    def available_items_count(self):
+        return self.products.filter(is_active=True, deleted_at__isnull=True).count()
+
+# Through model for Wishlist products to add timestamps
+class WishlistItem(models.Model):
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        unique_together = ['wishlist', 'product']
+        ordering = ['-added_at']
+    
+    def __str__(self):
+        return f"{self.product.name} in {self.wishlist.user.username}'s wishlist"
 
 # Message model for messaging between users and shopowners
 class Message(models.Model):
@@ -383,7 +584,7 @@ class Notification(models.Model):
     # User to be notified (shopowner)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     # Notification message
-    message = models.TextField()
+    text = models.TextField()
     # Type of notification with predefined choices
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='system')
     # Priority level of the notification
@@ -396,6 +597,11 @@ class Notification(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
+    # Additional references that exist in the database
+    message_id = models.BigIntegerField(null=True, blank=True)
+    inquiry_id = models.BigIntegerField(null=True, blank=True)
+    # Additional data for the notification
+    data = models.JSONField(default=dict)
     
     class Meta:
         ordering = ['-timestamp']  # Most recent first
@@ -406,7 +612,7 @@ class Notification(models.Model):
         ]
 
     def __str__(self):
-        return f"Notification for {self.user.username}: {self.message[:30]}..."
+        return f"Notification for {self.user.username}: {self.text[:30]}..."
     
     @property
     def priority_icon(self):
@@ -991,3 +1197,335 @@ class MarketingCampaignAnalytics(models.Model):
         if self.clicks > 0:
             return (self.conversions / self.clicks) * 100
         return 0
+
+
+# === CUSTOMER LOYALTY & REWARDS SYSTEM ===
+
+class LoyaltyProgram(models.Model):
+    """Shop-specific loyalty program configuration"""
+    shop = models.OneToOneField('Shop', on_delete=models.CASCADE, related_name='loyalty_program')
+    name = models.CharField(max_length=100, default="Loyalty Rewards")
+    description = models.TextField(blank=True)
+    
+    # Program Settings
+    is_active = models.BooleanField(default=True)
+    points_per_dollar = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
+    minimum_spend_for_points = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    points_expiry_days = models.IntegerField(default=365)  # Points expire after 1 year
+    
+    # Tier System
+    TIER_CHOICES = [
+        ('bronze', 'Bronze'),
+        ('silver', 'Silver'), 
+        ('gold', 'Gold'),
+        ('platinum', 'Platinum'),
+    ]
+    
+    # Tier Thresholds (annual spending)
+    bronze_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    silver_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=500)
+    gold_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=1500)
+    platinum_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=5000)
+    
+    # Tier Multipliers
+    bronze_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.00)
+    silver_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.25)
+    gold_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.50)
+    platinum_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=2.00)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.shop.name} - {self.name}"
+    
+    def get_tier_for_spending(self, annual_spending):
+        """Determine customer tier based on annual spending"""
+        if annual_spending >= self.platinum_threshold:
+            return 'platinum'
+        elif annual_spending >= self.gold_threshold:
+            return 'gold'
+        elif annual_spending >= self.silver_threshold:
+            return 'silver'
+        else:
+            return 'bronze'
+    
+    def get_tier_multiplier(self, tier):
+        """Get points multiplier for a tier"""
+        multipliers = {
+            'bronze': self.bronze_multiplier,
+            'silver': self.silver_multiplier,
+            'gold': self.gold_multiplier,
+            'platinum': self.platinum_multiplier,
+        }
+        return multipliers.get(tier, self.bronze_multiplier)
+
+
+class CustomerLoyalty(models.Model):
+    """Customer loyalty account for a specific shop"""
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='loyalty_accounts')
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='loyalty_customers')
+    
+    # Points Balance
+    total_points_earned = models.IntegerField(default=0)
+    total_points_redeemed = models.IntegerField(default=0)
+    current_points_balance = models.IntegerField(default=0)
+    
+    # Tier Information
+    current_tier = models.CharField(max_length=20, choices=LoyaltyProgram.TIER_CHOICES, default='bronze')
+    annual_spending = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tier_progress = models.DecimalField(max_digits=5, decimal_places=2, default=0)  # Percentage to next tier
+    
+    # Activity Tracking
+    last_activity_date = models.DateTimeField(auto_now=True)
+    total_orders = models.IntegerField(default=0)
+    first_purchase_date = models.DateTimeField(null=True, blank=True)
+    
+    # Birthday Rewards
+    birthday_date = models.DateField(null=True, blank=True)
+    birthday_reward_claimed_year = models.IntegerField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['customer', 'shop']
+        verbose_name_plural = "Customer Loyalty Accounts"
+    
+    def __str__(self):
+        return f"{self.customer.username} - {self.shop.name} ({self.current_tier.title()})"
+
+
+class LoyaltyTransaction(models.Model):
+    """Record of all loyalty points transactions"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    customer_loyalty = models.ForeignKey(CustomerLoyalty, on_delete=models.CASCADE, related_name='transactions')
+    
+    TRANSACTION_TYPES = [
+        ('earned_purchase', 'Points Earned from Purchase'),
+        ('earned_signup', 'Welcome Bonus'),
+        ('earned_referral', 'Referral Bonus'),
+        ('earned_review', 'Review Bonus'),
+        ('earned_birthday', 'Birthday Bonus'),
+        ('earned_bonus', 'Special Bonus'),
+        ('redeemed_discount', 'Redeemed for Discount'),
+        ('redeemed_product', 'Redeemed for Product'),
+        ('expired', 'Points Expired'),
+        ('adjustment', 'Manual Adjustment'),
+    ]
+    
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    points_change = models.IntegerField()  # Positive for earning, negative for spending
+    points_balance_after = models.IntegerField()
+    
+    # Optional references
+    reference_id = models.CharField(max_length=100, blank=True)  # Order ID, etc.
+    description = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        action = "earned" if self.points_change > 0 else "redeemed"
+        return f"{self.customer_loyalty.customer.username} {action} {abs(self.points_change)} points"
+
+
+class LoyaltyReward(models.Model):
+    """Available rewards that customers can redeem"""
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='loyalty_rewards')
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    
+    REWARD_TYPES = [
+        ('discount_percentage', 'Percentage Discount'),
+        ('discount_fixed', 'Fixed Amount Discount'),
+        ('free_shipping', 'Free Shipping'),
+        ('free_product', 'Free Product'),
+        ('bonus_points', 'Bonus Points'),
+    ]
+    
+    reward_type = models.CharField(max_length=20, choices=REWARD_TYPES)
+    points_cost = models.IntegerField()
+    
+    # Reward Value
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    discount_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    free_product = models.ForeignKey('Product', on_delete=models.CASCADE, null=True, blank=True)
+    bonus_points_amount = models.IntegerField(null=True, blank=True)
+    
+    # Availability
+    is_active = models.BooleanField(default=True)
+    max_redemptions_per_customer = models.IntegerField(default=1)
+    total_available = models.IntegerField(null=True, blank=True)  # None = unlimited
+    total_redeemed = models.IntegerField(default=0)
+    
+    # Validity
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    minimum_tier_required = models.CharField(max_length=20, choices=LoyaltyProgram.TIER_CHOICES, default='bronze')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.shop.name} - {self.name} ({self.points_cost} points)"
+
+
+class LoyaltyRedemption(models.Model):
+    """Record of reward redemptions"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    customer_loyalty = models.ForeignKey(CustomerLoyalty, on_delete=models.CASCADE, related_name='redemptions')
+    reward = models.ForeignKey(LoyaltyReward, on_delete=models.CASCADE, related_name='redemptions')
+    
+    points_used = models.IntegerField()
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('redeemed', 'Redeemed'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Generated coupon/code if applicable
+    redemption_code = models.CharField(max_length=50, unique=True, blank=True)
+    
+    # Usage tracking
+    order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.redemption_code:
+            self.redemption_code = self.generate_redemption_code()
+        super().save(*args, **kwargs)
+    
+    def generate_redemption_code(self):
+        """Generate unique redemption code"""
+        import random
+        import string
+        while True:
+            code = 'REWARD' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if not LoyaltyRedemption.objects.filter(redemption_code=code).exists():
+                return code
+    
+    def __str__(self):
+        return f"{self.customer_loyalty.customer.username} - {self.reward.name} - {self.redemption_code}"
+
+
+class ReferralProgram(models.Model):
+    """Referral program for customer acquisition"""
+    shop = models.OneToOneField('Shop', on_delete=models.CASCADE, related_name='referral_program')
+    
+    is_active = models.BooleanField(default=True)
+    referrer_reward_points = models.IntegerField(default=100)
+    referee_reward_points = models.IntegerField(default=50)
+    minimum_purchase_amount = models.DecimalField(max_digits=8, decimal_places=2, default=25.00)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.shop.name} Referral Program"
+
+
+class CustomerReferral(models.Model):
+    """Track customer referrals"""
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_made')
+    referee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_received')
+    shop = models.ForeignKey('Shop', on_delete=models.CASCADE, related_name='referrals')
+    
+    referral_code = models.CharField(max_length=20, unique=True)
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('expired', 'Expired'),
+    ]
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    first_purchase_order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = self.generate_referral_code()
+        super().save(*args, **kwargs)
+    
+    def generate_referral_code(self):
+        """Generate unique referral code"""
+        import random
+        import string
+        while True:
+            code = self.referrer.username[:4].upper() + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            if not CustomerReferral.objects.filter(referral_code=code).exists():
+                return code
+    
+    def __str__(self):
+        return f"{self.referrer.username} referred {self.referee.username} - {self.referral_code}"
+
+
+# Email Subscription model for newsletter signups
+class EmailSubscription(models.Model):
+    SUBSCRIPTION_TYPES = [
+        ('newsletter', 'Newsletter'),
+        ('promotions', 'Promotions'),
+        ('updates', 'Product Updates'),
+        ('shop_news', 'Shop News'),
+    ]
+    
+    subscriptionId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    email = models.EmailField(unique=True)
+    subscription_types = models.JSONField(default=list)  # List of subscription types
+    is_active = models.BooleanField(default=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='email_subscriptions')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    unsubscribed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Tracking
+    confirmation_token = models.CharField(max_length=255, null=True, blank=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    last_email_sent = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'email_subscriptions'
+        verbose_name = 'Email Subscription'
+        verbose_name_plural = 'Email Subscriptions'
+    
+    def generate_confirmation_token(self):
+        """Generate a unique confirmation token"""
+        import secrets
+        self.confirmation_token = secrets.token_urlsafe(32)
+        return self.confirmation_token
+    
+    def is_confirmed(self):
+        """Check if subscription is confirmed"""
+        return self.confirmed_at is not None
+    
+    def confirm_subscription(self):
+        """Confirm the subscription"""
+        self.confirmed_at = timezone.now()
+        self.confirmation_token = None
+        self.save()
+    
+    def unsubscribe(self):
+        """Unsubscribe from emails"""
+        self.is_active = False
+        self.unsubscribed_at = timezone.now()
+        self.save()
+    
+    def __str__(self):
+        status = "Confirmed" if self.is_confirmed() else "Pending"
+        return f"{self.email} - {status}"

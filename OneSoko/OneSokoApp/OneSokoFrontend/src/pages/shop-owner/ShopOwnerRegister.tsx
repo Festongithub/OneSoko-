@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
-import { triggerPasswordSave } from '../../utils/passwordManager';
+import { triggerPasswordSave, setupPasswordSave, enhanceFormForPasswordManager } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const ShopOwnerRegister: React.FC = () => {
@@ -34,6 +34,41 @@ const ShopOwnerRegister: React.FC = () => {
 
   const navigate = useNavigate();
   const { registerShopOwner } = useAuthStore();
+
+  // Enhance form for password manager compatibility
+  useEffect(() => {
+    if (formRef.current) {
+      enhanceFormForPasswordManager(formRef.current);
+    }
+  }, []);
+
+  // Auto-save passwords when user moves to step 2 or changes password
+  useEffect(() => {
+    if (formRef.current && formData.password && formData.email) {
+      // Small delay to allow form to update
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          // Store password data for browser password manager
+          const form = formRef.current;
+          const formDataObj = new FormData(form);
+          formDataObj.set('email', formData.email);
+          formDataObj.set('password', formData.password);
+          
+          // Trigger password manager detection
+          const event = new CustomEvent('password-updated', {
+            detail: { 
+              email: formData.email, 
+              hasPassword: true,
+              step: currentStep 
+            }
+          });
+          window.dispatchEvent(event);
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData.password, formData.email, currentStep]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -153,12 +188,20 @@ const ShopOwnerRegister: React.FC = () => {
         shop_phone: formData.shopPhone,
       });
 
-      // Trigger password save for browser
+      // Enhanced password save for browser
       if (formRef.current) {
         triggerPasswordSave(formRef.current);
+        
+        // Also try to store using Credential Management API
+        try {
+          const { passwordManagerUtils } = await import('../../utils/passwordManager');
+          await passwordManagerUtils.storeCredentials(formData.email, formData.password);
+        } catch (error) {
+          console.log('Credential Management API not available:', error);
+        }
       }
 
-      toast.success('Shop registration successful! Welcome to your shop dashboard!');
+      toast.success('Shop registration successful! Credentials saved to your password manager.');
       navigate('/shop/dashboard');
       
     } catch (error: any) {
@@ -279,6 +322,7 @@ const ShopOwnerRegister: React.FC = () => {
                       id="email"
                       name="email"
                       type="email"
+                      autoComplete="email username"
                       required
                       value={formData.email}
                       onChange={handleChange}
@@ -300,6 +344,7 @@ const ShopOwnerRegister: React.FC = () => {
                         id="firstName"
                         name="firstName"
                         type="text"
+                        autoComplete="given-name"
                         required
                         value={formData.firstName}
                         onChange={handleChange}
@@ -319,6 +364,7 @@ const ShopOwnerRegister: React.FC = () => {
                         id="lastName"
                         name="lastName"
                         type="text"
+                        autoComplete="family-name"
                         required
                         value={formData.lastName}
                         onChange={handleChange}
@@ -340,6 +386,7 @@ const ShopOwnerRegister: React.FC = () => {
                       id="phoneNumber"
                       name="phoneNumber"
                       type="tel"
+                      autoComplete="tel"
                       required
                       value={formData.phoneNumber}
                       onChange={handleChange}
@@ -361,6 +408,7 @@ const ShopOwnerRegister: React.FC = () => {
                         id="password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
                         required
                         value={formData.password}
                         onChange={handleChange}
@@ -394,6 +442,7 @@ const ShopOwnerRegister: React.FC = () => {
                         id="confirmPassword"
                         name="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
                         required
                         value={formData.confirmPassword}
                         onChange={handleChange}

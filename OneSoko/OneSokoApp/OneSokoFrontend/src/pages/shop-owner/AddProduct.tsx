@@ -3,9 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeftIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import type { Category, Tag } from '../../types';
 import { productApi, categoryApi, tagApi } from '../../services/productApi';
+import { shopApi } from '../../services/shopApi';
+import { useAuthStore } from '../../stores/authStore';
+import { useShopSession } from '../../hooks/useShopSession';
 import toast from 'react-hot-toast';
 
 const AddProduct: React.FC = () => {
+  const { user } = useAuthStore();
+  const { userShop, isLoadingShop } = useShopSession();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -225,6 +230,16 @@ const AddProduct: React.FC = () => {
       return;
     }
 
+    if (isLoadingShop) {
+      toast.error('Loading shop information. Please wait and try again.');
+      return;
+    }
+
+    if (!userShop) {
+      toast.error('Shop information not loaded. Please refresh and try again.');
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -241,12 +256,12 @@ const AddProduct: React.FC = () => {
         }
       }
 
-      // Create product using API
+      // Create product using shop API to ensure proper association
       const productData = {
         name: formData.name,
         description: formData.description,
         price: formData.price,
-        stock_quantity: parseInt(formData.stock_quantity),
+        quantity: parseInt(formData.stock_quantity), // Backend expects 'quantity' not 'stock_quantity'
         category: parseInt(formData.category_id), // Backend might expect 'category' instead of 'category_id'
         tag_names: formData.tags, // Send as tag names for backend processing
         image_url: imageUrl || undefined,
@@ -258,17 +273,17 @@ const AddProduct: React.FC = () => {
         }))
       };
 
-      console.log('Creating product:', productData);
+      console.log('Creating product for shop:', userShop?.shopId, 'Shop object:', userShop, 'Product data:', productData);
       
-      // Create product via API
-      await productApi.create(productData as any);
+      // Add product to the shop via shopApi
+      await shopApi.addProduct(userShop.shopId, productData as any);
       
-      toast.success('Product created successfully!');
+      toast.success('Product added to your shop successfully!');
       navigate('/shop/products');
       
     } catch (error: any) {
       console.error('Product creation error:', error);
-      toast.error('Failed to create product. Please try again.');
+      toast.error('Failed to add product to shop. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -693,10 +708,13 @@ const AddProduct: React.FC = () => {
             </Link>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isLoadingShop || !userShop}
               className="btn-primary"
             >
-              {isLoading ? 'Creating Product...' : 'Create Product'}
+              {isLoading ? 'Creating Product...' : 
+               isLoadingShop ? 'Loading Shop...' : 
+               !userShop ? 'Shop Not Found' : 
+               'Create Product'}
             </button>
           </div>
         </form>

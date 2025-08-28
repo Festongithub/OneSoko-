@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../stores/authStore';
 import GoogleOAuthButton from '../../components/auth/GoogleOAuthButton';
 import FacebookOAuthButton from '../../components/auth/FacebookOAuthButton';
 import GitHubOAuthButton from '../../components/auth/GitHubOAuthButton';
-import { triggerPasswordSave } from '../../utils/passwordManager';
+import { triggerPasswordSave, enhanceFormForPasswordManager, passwordManagerUtils } from '../../utils/passwordManager';
 import toast from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
@@ -24,6 +24,59 @@ const LoginPage: React.FC = () => {
   const { login, userType } = useAuthStore();
 
   const from = location.state?.from?.pathname || '/';
+
+  // Enhance form for password manager compatibility and try to load saved credentials
+  useEffect(() => {
+    const initializePasswordManager = async () => {
+      if (formRef.current) {
+        enhanceFormForPasswordManager(formRef.current);
+        
+        // Try to request stored credentials
+        try {
+          const storedCredential = await passwordManagerUtils.requestStoredCredentials();
+          if (storedCredential && storedCredential.id && storedCredential.password) {
+            setFormData({
+              email: storedCredential.id,
+              password: storedCredential.password
+            });
+            toast.success('Credentials loaded from password manager');
+          }
+        } catch (error) {
+          // Silently fail - not all browsers support this
+          console.log('Could not load stored credentials:', error);
+        }
+      }
+    };
+
+    initializePasswordManager();
+  }, []);
+
+  // Auto-trigger password save when credentials are entered
+  useEffect(() => {
+    if (formRef.current && formData.email && formData.password) {
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          // Prepare form data for password manager
+          const form = formRef.current;
+          const formDataObj = new FormData(form);
+          formDataObj.set('email', formData.email);
+          formDataObj.set('password', formData.password);
+          
+          // Trigger password manager to detect credentials
+          const event = new CustomEvent('credentials-entered', {
+            detail: { 
+              email: formData.email, 
+              hasPassword: true,
+              loginType: loginType
+            }
+          });
+          window.dispatchEvent(event);
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formData.email, formData.password, loginType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,12 +125,19 @@ const LoginPage: React.FC = () => {
       // Use the auth store login method which handles the API call
       await login(formData.email, formData.password);
       
-      // Trigger password save for browser
+      // Enhanced password save for browser
       if (formRef.current) {
         triggerPasswordSave(formRef.current);
+        
+        // Also try to store using Credential Management API
+        try {
+          await passwordManagerUtils.storeCredentials(formData.email, formData.password);
+        } catch (error) {
+          console.log('Credential Management API not available:', error);
+        }
       }
       
-      toast.success('Login successful!');
+      toast.success('Login successful! Credentials saved to your password manager.');
       
       // Check if user is a shop owner and redirect accordingly
       const redirectPath = userType === 'shop_owner' ? '/shop/dashboard' : from;

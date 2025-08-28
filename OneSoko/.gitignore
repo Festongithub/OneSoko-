@@ -1,3 +1,7 @@
 #!/bin/bash
 env
+<<<<<<< HEAD
+=======
+.vscode 
+>>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
 __pycache__

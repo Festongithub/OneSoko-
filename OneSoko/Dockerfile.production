@@ -1,0 +1,87 @@
+# Production Dockerfile for OneSoko - Full Stack Application
+# This file builds both frontend and backend for production deployment
+
+# ================================
+# Frontend Build Stage
+# ================================
+FROM node:18-alpine as frontend-builder
+
+# Set working directory for frontend
+WORKDIR /app/frontend
+
+# Copy package files first for better caching
+COPY OneSokoApp/OneSokoFrontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy frontend source code
+COPY OneSokoApp/OneSokoFrontend/ ./
+
+# Build the React application for production
+RUN npm run build
+
+# ================================
+# Python Backend Stage
+# ================================
+FROM python:3.13.5-slim as backend
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_ENV=production \
+    DEBIAN_FRONTEND=noninteractive
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    curl \
+    vim \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create user for running the application
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Create necessary directories
+RUN mkdir -p /app/staticfiles /app/media /app/logs \
+    && chown -R appuser:appuser /app
+
+# Copy and install Python requirements
+COPY requirements_production.txt requirements_basic.txt ./
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements_production.txt \
+    && pip install --no-cache-dir gunicorn
+
+# Copy Django project files
+COPY . .
+
+# Copy built frontend from previous stage
+COPY --from=frontend-builder /app/frontend/dist ./static_frontend/
+
+# Set proper ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Collect static files
+RUN python manage.py collectstatic --noinput || echo "Static files collection completed with warnings"
+
+# Create gunicorn log directory
+RUN mkdir -p /app/logs/gunicorn
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/api/health/ || exit 1
+
+# Default command - can be overridden
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "MyOneSoko.wsgi:application"]
