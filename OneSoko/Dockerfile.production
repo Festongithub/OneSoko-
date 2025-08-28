@@ -54,6 +54,8 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs \
 
 # Copy and install Python requirements
 COPY requirements_production.txt requirements_basic.txt ./
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements_production.txt \
     && pip install --no-cache-dir gunicorn
