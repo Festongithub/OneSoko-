@@ -1,70 +1,9 @@
-# OneSoko Production Requirements
-# Core Django dependencies
-Django>=4.2,<5.1
-djangorestframework==3.15.1
-django-cors-headers==4.3.1
-djangorestframework-simplejwt==5.3.0
-django-filter==23.5
-
-# Database
-mysqlclient==2.2.0
-# django-db-pool==1.0.0  # Removed - not compatible with Python 3.13
-
-# Caching and Performance
-redis==4.6.0
-django-redis==5.4.0
-hiredis==2.2.3
-
-# Background Tasks
-celery[redis]==5.3.4
-django-celery-beat==2.6.0
-django-celery-results==2.5.1
-
-# File Storage
-django-storages==1.14.2
-boto3==1.34.0
-botocore==1.34.0
-
-# Image processing library (updated for Python 3.13 compatibility)
-Pillow>=10.2.0
-
-# Security and Rate Limiting
-django-ratelimit==4.1.0
-# Security middleware for Django (updated version)
-# django-security>=0.20.0  # Removed due to version conflicts
-
-# Monitoring and Health Checks
-django-health-check==3.17.0
-sentry-sdk[django]==1.38.0
-
-# Production Server
-gunicorn==21.2.0
-whitenoise==6.6.0
-
-# API Documentation
-drf-spectacular==0.27.0
-
-# Data Processing
-pandas>=2.2.0
-numpy>=1.26.0
-
-# Utilities
+from decouple import config
+Django==4.2
+djangorestframework==3.14.0
+mysqlclient==2.1.1
+gunicorn==20.1.0
+whitenoise==6.3.0
+django-cors-headers==3.14.0
+django-environ==0.8.1
 python-decouple==3.8
-django-extensions==3.2.3
-requests==2.31.0
-
-# Development and Testing (optional)
-django-debug-toolbar==4.2.0
-factory-boy==3.3.0
-pytest==7.4.3
-pytest-django==4.7.0
-coverage==7.3.2
-
-# Logging
-structlog==23.2.0
-
-# Timezone handling
-pytz==2023.3.post1
-
-# Environment variables
-python-dotenv==1.0.0
