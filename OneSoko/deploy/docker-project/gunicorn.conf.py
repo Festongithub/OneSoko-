@@ -1,0 +1,12 @@
+bind = "0.0.0.0:8000"
+workers = 3
+worker_class = "sync"
+timeout = 30
+loglevel = "info"
+accesslog = "/app/logs/gunicorn/access.log"
+errorlog = "/app/logs/gunicorn/error.log"
+capture_output = True
+enable_stdio_inheritance = True
+preload_app = True
+max_requests = 1000
+max_requests_jitter = 50

@@ -1,21 +1,7 @@
-# OneSoko Basic Requirements for Docker Build
-Django>=5.0,<6.0
-djangorestframework>=3.14
-Django==5.2.5
-djangorestframework
-gunicorn
-mysqlclient
-redis
-Pillow
-python-decouple
-django-cors-headers
-django-filter
-djangorestframework-simplejwt>=5.0
-mysqlclient>=2.2.0
-redis>=4.0
-django-redis>=5.0
-Pillow>=10.0
-gunicorn>=20.0
-requests>=2.28
-whitenoise>=6.0  # For serving static files in production
-dj-database-url>=2.0  # For database URL parsing
+Flask==2.0.3
+Django==4.0.6
+djangorestframework==3.12.4
+mysqlclient==2.0.3
+pytest==6.2.5
+pytest-django==4.5.2
+flake8==3.9.2
