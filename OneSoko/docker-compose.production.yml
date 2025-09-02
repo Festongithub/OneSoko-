@@ -7,8 +7,6 @@
 # - Nginx reverse proxy
 # - Celery workers for background tasks
 
-version: '3.8'
-
 services:
   # Django Web Application
   web:
@@ -56,7 +54,7 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "onesoko_user", "-p${MYSQL_PASSWORD:-onesoko_password}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       timeout: 20s
       retries: 10
     networks:

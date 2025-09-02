@@ -14,3 +14,24 @@
 [2025-09-02 07:08:48 +0000] [8] [INFO] Booting worker with pid: 8
 [2025-09-02 07:08:48 +0000] [8] [INFO] Worker spawned (pid: 8)
 [2025-09-02 07:08:48 +0000] [8] [INFO] Worker initialized (pid: 8)
+[2025-09-02 08:51:11 +0000] [1] [INFO] Starting gunicorn 20.1.0
+[2025-09-02 08:51:11 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+[2025-09-02 08:51:11 +0000] [1] [INFO] Using worker: sync
+[2025-09-02 08:51:11 +0000] [1] [INFO] OneSoko server is ready. Spawning workers
+[2025-09-02 08:51:11 +0000] [1] [INFO] Worker spawned (pid: [booting])
+[2025-09-02 08:51:11 +0000] [7] [INFO] Booting worker with pid: 7
+[2025-09-02 08:51:11 +0000] [7] [INFO] Worker spawned (pid: 7)
+[2025-09-02 08:51:11 +0000] [7] [INFO] Worker initialized (pid: 7)
+[2025-09-02 08:51:11 +0000] [1] [INFO] Worker spawned (pid: [booting])
+[2025-09-02 08:51:11 +0000] [8] [INFO] Booting worker with pid: 8
+[2025-09-02 08:51:11 +0000] [8] [INFO] Worker spawned (pid: 8)
+[2025-09-02 08:51:11 +0000] [8] [INFO] Worker initialized (pid: 8)
+[2025-09-02 08:51:12 +0000] [1] [INFO] Worker spawned (pid: [booting])
+[2025-09-02 08:51:12 +0000] [9] [INFO] Booting worker with pid: 9
+[2025-09-02 08:51:12 +0000] [9] [INFO] Worker spawned (pid: 9)
+[2025-09-02 08:51:12 +0000] [9] [INFO] Worker initialized (pid: 9)
+[2025-09-02 09:15:19 +0000] [1] [INFO] Handling signal: term
+[2025-09-02 09:15:19 +0000] [7] [INFO] Worker exiting (pid: 7)
+[2025-09-02 09:15:19 +0000] [8] [INFO] Worker exiting (pid: 8)
+[2025-09-02 09:15:19 +0000] [9] [INFO] Worker exiting (pid: 9)
+[2025-09-02 09:15:20 +0000] [1] [INFO] Shutting down: Master

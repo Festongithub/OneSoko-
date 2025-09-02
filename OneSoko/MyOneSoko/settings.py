@@ -294,9 +294,9 @@ SERVER_EMAIL = 'server@onesoko.co.ke'
 # EMAIL_HOST_USER = 'your-email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'your-email-password'
 
-# Heroku deployment settings
-import django_heroku
-django_heroku.settings(locals())
+# Docker deployment settings (not using Heroku)
+# import django_heroku
+# django_heroku.settings(locals())
 
 # Whitenoise for static files
 MIDDLEWARE = [
