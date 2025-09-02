@@ -14,11 +14,8 @@ import { StarIcon } from '@heroicons/react/24/solid';
 import AddToCartButton from '../../components/cart/AddToCartButton';
 import { productApi, categoryApi } from '../../services/productApi';
 import type { Product } from '../../types';
-<<<<<<< HEAD
 import { toNumber } from '../../utils/helpers';
-=======
 import { useQuery } from '@tanstack/react-query';
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
 
 // Sort options
 const sortOptions = [

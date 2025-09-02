@@ -4,12 +4,8 @@ import {
   CurrencyDollarIcon,
   UsersIcon,
   ShoppingBagIcon,
-<<<<<<< HEAD
-  ArrowTrendingUpIcon as TrendingUpIcon,
-=======
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
   ArrowUpIcon,
   ArrowDownIcon,
 } from '@heroicons/react/24/outline';

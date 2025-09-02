@@ -1,0 +1,8 @@
+172.24.0.5 - - [01/Sep/2025:16:31:02 +0000] "HEAD / HTTP/1.0" 200 752 "-" "curl/8.14.1"
+172.24.0.5 - - [01/Sep/2025:16:31:11 +0000] "GET / HTTP/1.0" 200 752 "-" "curl/8.14.1"
+172.24.0.5 - - [01/Sep/2025:16:31:18 +0000] "GET /api/ HTTP/1.0" 401 58 "-" "curl/8.14.1"
+172.24.0.5 - - [01/Sep/2025:16:31:47 +0000] "GET / HTTP/1.0" 200 752 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+172.24.0.5 - - [01/Sep/2025:16:31:57 +0000] "GET /api/ HTTP/1.0" 401 5042 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+172.24.0.5 - - [01/Sep/2025:16:31:58 +0000] "GET /favicon.ico HTTP/1.0" 200 752 "http://localhost:8080/api/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+172.24.0.5 - - [01/Sep/2025:16:32:35 +0000] "GET /api/products HTTP/1.0" 200 752 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+172.24.0.5 - - [01/Sep/2025:16:36:06 +0000] "GET /auth/login HTTP/1.0" 200 752 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"

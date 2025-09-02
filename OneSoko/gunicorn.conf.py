@@ -22,9 +22,9 @@ max_requests_jitter = 100
 preload_app = True
 
 # User and group to run workers (only if running as root)
-if os.getuid() == 0:  # Running as root
-    user = "appuser"
-    group = "appuser"
+# if os.getuid() == 0:  # Running as root
+#     user = "appuser"
+#     group = "appuser"
 
 # Logging
 log_dir = "/app/logs"

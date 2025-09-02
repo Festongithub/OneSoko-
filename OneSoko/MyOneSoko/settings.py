@@ -111,17 +111,7 @@ WSGI_APPLICATION = 'MyOneSoko.wsgi.application'
 
 # MySQL database configuration
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'OneSokodb'),
-        'USER': os.environ.get('DB_USER', 'flamers'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Feston@01'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
+    'default': dj_database_url.parse(os.environ.get('DATABASE_URL', 'mysql://root:rootpassword@localhost:3306/OneSokodb'))
 }
 
 
@@ -295,8 +285,8 @@ SERVER_EMAIL = 'server@onesoko.co.ke'
 # EMAIL_HOST_PASSWORD = 'your-email-password'
 
 # Heroku deployment settings
-import django_heroku
-django_heroku.settings(locals())
+# import django_heroku
+# django_heroku.settings(locals())
 
 # Whitenoise for static files
 MIDDLEWARE = [

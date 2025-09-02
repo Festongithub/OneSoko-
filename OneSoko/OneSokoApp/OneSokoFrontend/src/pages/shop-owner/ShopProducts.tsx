@@ -36,26 +36,13 @@ const ShopProducts: React.FC = () => {
         const categoriesData = await categoryApi.getAll();
         setCategories(categoriesData);
         
-<<<<<<< HEAD
-        // Get products from the shop
-        if (shopData) {
-          const shopId = shopData.id ?? shopData.shopId;
-          if (shopId) {
-            const shopProducts = await shopApi.getProducts(shopId);
-            setProducts(shopProducts);
-          } else {
-            setProducts([]);
-          }
-=======
         // Get products from the user's shop
         if (userShop) {
           const shopProducts = await shopApi.getProducts(userShop.shopId);
           setProducts(shopProducts);
         } else {
           setProducts([]);
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
         }
-        
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load products');
@@ -105,22 +92,13 @@ const ShopProducts: React.FC = () => {
         bValue = b.name.toLowerCase();
         break;
       case 'price':
-  aValue = typeof a.price === 'number' ? a.price : parseFloat(String(a.price || '0'));
-  bValue = typeof b.price === 'number' ? b.price : parseFloat(String(b.price || '0'));
+        aValue = typeof a.price === 'number' ? a.price : parseFloat(String(a.price || '0'));
+        bValue = typeof b.price === 'number' ? b.price : parseFloat(String(b.price || '0'));
         break;
-<<<<<<< HEAD
-      case 'stock':
-        aValue = a.stock_quantity;
-        bValue = b.stock_quantity;
-        break;
-      case 'created_at':
-  aValue = new Date(a.created_at ?? 0);
-  bValue = new Date(b.created_at ?? 0);
-=======
       case 'quantity':
         aValue = a.quantity;
         bValue = b.quantity;
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
+        break;
         break;
       default:
         return 0;
@@ -252,19 +230,11 @@ const ShopProducts: React.FC = () => {
                       <span className="text-lg font-bold text-primary-600">
                         ${product.price}
                       </span>
-<<<<<<< HEAD
-                        <span className={`badge ${
+                      <span className={`badge ${
                         (product.stock_quantity ?? product.quantity ?? 0) > 10 ? 'badge-success' : 
                         (product.stock_quantity ?? product.quantity ?? 0) > 0 ? 'badge-warning' : 'badge-danger'
                       }`}>
                         {(product.stock_quantity ?? product.quantity ?? 0) > 0 ? `${product.stock_quantity ?? product.quantity} in stock` : 'Out of stock'}
-=======
-                      <span className={`badge ${
-                        product.quantity > 10 ? 'badge-success' : 
-                        product.quantity > 0 ? 'badge-warning' : 'badge-danger'
-                      }`}>
-                        {product.quantity > 0 ? `${product.quantity} in stock` : 'Out of stock'}
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
                       </span>
                     </div>
                     <div className="text-xs text-secondary-500 mb-4">
@@ -290,11 +260,7 @@ const ShopProducts: React.FC = () => {
                       Edit
                     </Link>
                     <button
-<<<<<<< HEAD
                       onClick={() => product.id && handleDeleteProduct(product.id)}
-=======
-                      onClick={() => handleDeleteProduct(product.productId)}
->>>>>>> 6ff59c0b0e42dec017f8df4c1fa4b08be20c7749
                       className="flex-1 btn-danger text-xs py-2"
                     >
                       <TrashIcon className="h-3 w-3 mr-1" />

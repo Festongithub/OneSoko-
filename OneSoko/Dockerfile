@@ -1,6 +1,6 @@
 # Simple Dockerfile for OneSoko Django Application
 
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1

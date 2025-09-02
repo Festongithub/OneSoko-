@@ -6,8 +6,8 @@ WORKDIR /app/frontend
 # Copy package files
 COPY OneSokoApp/OneSokoFrontend/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies) for build
+RUN npm ci
 
 # Copy source code
 COPY OneSokoApp/OneSokoFrontend/ ./
@@ -16,7 +16,7 @@ COPY OneSokoApp/OneSokoFrontend/ ./
 RUN npm run build
 
 # Production Stage
-FROM python:3.13.5-slim
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -49,6 +49,5 @@ RUN mkdir -p /app/staticfiles
 RUN python manage.py collectstatic --noinput || true
 
 # Run migrations and start server
-CMD python manage.py migrate && \
-    python manage.py collectstatic --noinput && \
+CMD python manage.py collectstatic --noinput && \
     gunicorn --bind 0.0.0.0:8000 MyOneSoko.wsgi:application
